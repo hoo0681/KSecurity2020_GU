@@ -29,6 +29,9 @@ import pandas as pd
 from . import utility
 import logging
 
+LIEF_MAJOR, LIEF_MINOR, _ = lief.__version__.split('.')
+LIEF_EXPORT_OBJECT = int(LIEF_MAJOR) > 0 or ( int(LIEF_MAJOR)==0 and int(LIEF_MINOR) >= 10 )
+
 FEATURE_TPYE_LIST=[
               'ByteHistogram',
               'ByteEntropyHistogram',

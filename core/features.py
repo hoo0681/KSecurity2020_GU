@@ -38,7 +38,8 @@ FEATURE_TPYE_LIST=[
               'GeneralFileInfo',
               'HeaderFileInfo',
               'StringExtractor',
-              'ParsingWarning']
+              'ParsingWarning'
+]
 
 class FeatureType(object):
     ''' Base class from which each feature type may inherit '''

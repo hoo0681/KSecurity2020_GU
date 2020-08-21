@@ -38,7 +38,7 @@ FEATURE_TPYE_LIST=[
               'GeneralFileInfo',
               'HeaderFileInfo',
               'StringExtractor',
-              "ParsingWarning"
+              'ParsingWarning'
 ]
 
 class FeatureType(object):

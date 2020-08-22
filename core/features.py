@@ -70,7 +70,7 @@ class FeatureType(object):
 class ByteHistogram(FeatureType):
     ''' Byte histogram (count + non-normalized) over the entire binary file '''
 
-    name = 'histogram'
+    name = 'ByteHistogram'
     dim = 256
 
     def __init__(self):
@@ -93,7 +93,7 @@ class ByteEntropyHistogram(FeatureType):
     See Section 2.1.1 in https://arxiv.org/pdf/1508.03096.pdf for more info.
     '''
 
-    name = 'byteentropy'
+    name = 'ByteEntropyHistogram'
     dim = 256
 
     def __init__(self, step=1024, window=2048):
@@ -146,7 +146,7 @@ class SectionInfo(FeatureType):
     to summarize all this section info into a feature vector.
     '''
 
-    name = 'section'
+    name = 'SectionInfo'
     dim = 5 + 50 + 50 + 50 + 50 + 50
 
     def __init__(self):
@@ -218,7 +218,7 @@ class ImportsInfo(FeatureType):
     functions is contained in GeneralFileInfo.
     '''
 
-    name = 'imports'
+    name = 'ImportsInfo'
     dim = 1280
 
     def __init__(self):
@@ -259,7 +259,7 @@ class ExportsInfo(FeatureType):
     functions is contained in GeneralFileInfo.
     '''
 
-    name = 'exports'
+    name = 'ExportsInfo'
     dim = 128
 
     def __init__(self):
@@ -285,7 +285,7 @@ class ExportsInfo(FeatureType):
 class GeneralFileInfo(FeatureType):
     ''' General information about the file '''
 
-    name = 'general'
+    name = 'GeneralFileInfo'
     dim = 10
 
     def __init__(self):
@@ -333,7 +333,7 @@ class GeneralFileInfo(FeatureType):
 class HeaderFileInfo(FeatureType):
     ''' Machine, architecure, OS, linker and other information extracted from header '''
 
-    name = 'header'
+    name = 'HeaderFileInfo'
     dim = 62
 
     def __init__(self):
@@ -410,7 +410,7 @@ class HeaderFileInfo(FeatureType):
 class StringExtractor(FeatureType):
     ''' Extracts strings from raw byte stream '''
 
-    name = 'strings'
+    name = 'StringExtractor'
     dim = 1 + 1 + 1 + 96 + 1 + 1 + 1 + 1 + 1
 
     def __init__(self):

@@ -26,9 +26,10 @@ H. Anderson and P. Roth, "EMBER: An Open Dataset for Training Static PE Malware 
 
 1 : FeatureType을 상속받아 새로운 특징클래스생성 
 템플릿:
-'''
+
+```
 class 새로운특징(FeatureType):
-    ''' 설명'''
+    """ 설명"""
 
     name = '알아보기쉬운 이름'
     dim = 출력물의 차원수
@@ -46,7 +47,7 @@ class 새로운특징(FeatureType):
         #raw_obj =>raw_features에서 반환하는 값
         #가공과정
         return 모델에_넘겨줄_최종_데이터
-'''
+```
 
 2 : features.py문서 상단의 FEATURE_TPYE_LIST에 새로운 클래스이름 추가
 

@@ -39,34 +39,31 @@ class Evaluator:
         http://www.tarekatwan.com/index.php/2017/12/how-to-plot-a-confusion-matrix-in-python/
         """
         plt.clf()
-        fig=plt.Figure()
-        ax1=fig.add_subplot(1,2,1)
-        ax2=fig.add_subplot(1,2,2)
-        
-        ax1.imshow(cm, interpolation='nearest', cmap=plt.cm.binary)
+        plt.figure(121)
+        plt.imshow(cm, interpolation='nearest', cmap=plt.cm.binary)
         classNames = ['Malware','Beign']
-        ax1.title('Malware Detection')
-        ax1.ylabel('Test')
-        ax1.xlabel('Label')
-        ax1.colorbar()
+        plt.title('Malware Detection')
+        plt.ylabel('Test')
+        plt.xlabel('Label')
+        plt.colorbar()
         tick_marks = np.arange(len(classNames))
-        ax1.xticks(tick_marks, classNames, rotation=45)
-        ax1.yticks(tick_marks, classNames)
+        plt.xticks(tick_marks, classNames, rotation=45)
+        plt.yticks(tick_marks, classNames)
         s = [['TP','FP'], ['FN', 'TN']]
         
         fmt = 'd'
         thresh = cm.max() / 2.
         for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
-            ax1.text(j, i, format(cm[i, j], fmt),
+            plt.text(j, i, format(cm[i, j], fmt),
                     horizontalalignment="center",
                     color="white" if cm[i, j] > thresh else "black")
-        
-        ax2.plot(self.fpr,self.tpr,'o-',label="Logistic Regression")
-        ax2.plot([0, 1], [0, 1], 'k--', label="random guess")
+        plt.figure(122)
+        plt.plot(self.fpr,self.tpr,'o-',label="Logistic Regression")
+        plt.plot([0, 1], [0, 1], 'k--', label="random guess")
         #ax2.plot([fallout], [recall], 'ro', ms=10)
-        ax2.xlabel('위양성률(Fall-Out)')
-        ax2.ylabel('재현률(Recall)')
-        ax2.title('Receiver operating characteristic example')
+        plt.xlabel('위양성률(Fall-Out)')
+        plt.ylabel('재현률(Recall)')
+        plt.title('Receiver operating characteristic example')
         plt.show()
         
     def run(self):

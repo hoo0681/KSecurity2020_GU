@@ -49,7 +49,9 @@ class FeatureType(object):
 
     name = ''
     dim = 0
-
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        cls.name = cls.__name__
     def __repr__(self):
         return '{}({})'.format(self.name, self.dim)
 

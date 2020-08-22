@@ -21,6 +21,33 @@ H. Anderson and P. Roth, "EMBER: An Open Dataset for Training Static PE Malware 
 ```  
 
 <br />
+# features.py 편집방법:
+
+1 : FeatureType을 상속받아 새로운 특징클래스생성 
+템플릿:
+'''
+class 새로운특징(FeatureType):
+    ''' 설명'''
+
+    name = '알아보기쉬운 이름'
+    dim = 출력물의 차원수
+
+    def __init__(self): #생성자
+        super(FeatureType, self).__init__()#상속받기
+
+    def raw_features(self, bytez, lief_and_pefile):
+        lief_binary,pe=lief_and_pefile
+        #bytez => 파일내용 타입: byte 길이 : 가변적
+        #lief_and_pefile => life와 pefile로 parse된 결과물, 타입: 튜플, 내용 : (life_binary,pe)
+        return 가공되지 않은 추출된 값
+
+    def process_raw_features(self, raw_obj):#추출한 값 가공
+        #raw_obj =>raw_features에서 반환하는 값
+        #가공과정
+        return 모델에_넘겨줄_최종_데이터
+'''
+
+2 : features.py문서 상단의 FEATURE_TPYE_LIST에 새로운 클래스이름 추가
 
 # State Change
 1. ember/features.py: change row variables -2018.10  

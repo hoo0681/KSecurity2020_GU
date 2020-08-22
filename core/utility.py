@@ -38,8 +38,6 @@ class FeatureType:
     def __init__(self):
         self.names ={}
         for i,v in zip(range(len(features.FEATURE_TPYE_LIST)),features.FEATURE_TPYE_LIST):
-            #new_attr_name='Fe'+v+'ChkBox'
-            #new_attr=self.__getattribute__(new_attr_name)
             func=getattr(features,v)
             self.names[v]=func()
 

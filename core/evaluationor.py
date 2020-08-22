@@ -79,11 +79,14 @@ class Evaluator:
                 #get and print matrix
                 tn, fp, fn, tp = confusion_matrix(y, ypred).ravel()
                 mt = np.array([[tp, fp],[fn, tn]])
-
+                MCC= ((tp*tn-fp*fn)/float(((tp+fp)*(tp+fn)*(tn+fp)*(tn+fn))**0.5))
+                F1_score=((2*tp)/float(2*tp+fp+fn))
                 logger.info(mt)
                 logger.info("false postive rate : %.2f%%" % ( round(fp / float(fp + tn), 4) * 100))
                 logger.info("false negative rate : %.2f%%" % ( round(fn / float(fn + tp), 4) * 100))
-                logger.info("Matthews correlation coefficient: %.2f%%" % ((tp*tn-fp*fn)/float(((tp+fp)*(tp+fn)*(tn+fp)*(tn+fn))**0.5)))
+                logger.info("Matthews correlation coefficient [-1 ~ +1] +1 is best!! score 0.5 means random classifier : %.2f" % (MCC))
+                logger.info("normalized Matthews correlation coefficient [0~1] 1 is best!! 0.5 means random classifier: %.2f" % ((MCC+1)/2))
+                logger.info("F1 score: %.2f" % (F1_score))
                 # run plot
                 self.plot(mt)
 

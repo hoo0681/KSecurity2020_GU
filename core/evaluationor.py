@@ -7,7 +7,7 @@ Default value of threshold is 0.7
 
 Save options is not completed. I will save the data to confusion_matrix picture.
 """
-from sklearn.metrics import confusion_matrix, accuracy_score
+from sklearn.metrics import confusion_matrix, accuracy_score, roc_curve
 import pandas as pd
 import numpy as np
 import argparse
@@ -39,24 +39,34 @@ class Evaluator:
         http://www.tarekatwan.com/index.php/2017/12/how-to-plot-a-confusion-matrix-in-python/
         """
         plt.clf()
-        plt.imshow(cm, interpolation='nearest', cmap=plt.cm.binary)
+        fig=plt.figure()
+        ax1=fig.add_subplot(1,2,1)
+        ax2=fig.add_subplot(1,2,2)
+        
+        ax1.imshow(cm, interpolation='nearest', cmap=plt.cm.binary)
         classNames = ['Malware','Beign']
-        plt.title('Malware Detection')
-        plt.ylabel('Test')
-        plt.xlabel('Label')
-        plt.colorbar()
+        ax1.title('Malware Detection')
+        ax1.ylabel('Test')
+        ax1.xlabel('Label')
+        ax1.colorbar()
         tick_marks = np.arange(len(classNames))
-        plt.xticks(tick_marks, classNames, rotation=45)
-        plt.yticks(tick_marks, classNames)
+        ax1.xticks(tick_marks, classNames, rotation=45)
+        ax1.yticks(tick_marks, classNames)
         s = [['TP','FP'], ['FN', 'TN']]
         
         fmt = 'd'
         thresh = cm.max() / 2.
         for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
-            plt.text(j, i, format(cm[i, j], fmt),
+            ax1.text(j, i, format(cm[i, j], fmt),
                     horizontalalignment="center",
                     color="white" if cm[i, j] > thresh else "black")
-
+        
+        ax2.plot(self.fpr,self.tpr,'o-',label="Logistic Regression")
+        ax2.plot([0, 1], [0, 1], 'k--', label="random guess")
+        #ax2.plot([fallout], [recall], 'ro', ms=10)
+        ax2.xlabel('위양성률(Fall-Out)')
+        ax2.ylabel('재현률(Recall)')
+        ax2.title('Receiver operating characteristic example')
         plt.show()
         
     def run(self):
@@ -74,6 +84,7 @@ class Evaluator:
 
                 # #get and print accuracy
                 accuracy = accuracy_score(y, ypred)
+                self.fpr, self.tpr, thresholds = roc_curve(y, ypred)
                 print("accuracy : %.2f%%" % (np.round(accuracy, decimals=4)*100))
             
                 #get and print matrix

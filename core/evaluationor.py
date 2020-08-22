@@ -39,7 +39,7 @@ class Evaluator:
         http://www.tarekatwan.com/index.php/2017/12/how-to-plot-a-confusion-matrix-in-python/
         """
         plt.clf()
-        plt.figure(121)
+        plt.figure(1)
         plt.imshow(cm, interpolation='nearest', cmap=plt.cm.binary)
         classNames = ['Malware','Beign']
         plt.title('Malware Detection')
@@ -57,12 +57,12 @@ class Evaluator:
             plt.text(j, i, format(cm[i, j], fmt),
                     horizontalalignment="center",
                     color="white" if cm[i, j] > thresh else "black")
-        plt.figure(122)
-        plt.plot(self.fpr,self.tpr,'o-',label="Logistic Regression")
+        plt.figure(2)
+        plt.plot(self.fpr,self.tpr,'o-',ms=2,label="Logistic Regression")
         plt.plot([0, 1], [0, 1], 'k--', label="random guess")
         #ax2.plot([fallout], [recall], 'ro', ms=10)
-        plt.xlabel('위양성률(Fall-Out)')
-        plt.ylabel('재현률(Recall)')
+        plt.xlabel('(Fall-Out)')
+        plt.ylabel('(Recall)')
         plt.title('Receiver operating characteristic example')
         plt.show()
         

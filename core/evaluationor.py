@@ -86,6 +86,7 @@ class Evaluator:
                 F1_score=((2*tp)/float(2*tp+fp+fn))
 
                 logger.info(mt)
+                print('https://bmcgenomics.biomedcentral.com/articles/10.1186/s12864-019-6413-7')
                 print("(MCC)Matthews correlation coefficient \n [-1 ~ +1] +1 is best!! score 0 means random classifier")
                 print("(nMCC)normalized Matthews correlation coefficient \n [0~1] 1 is best!! 0.5 means random classifier")
                 print("Accuracy : %.2f%%" % ( round(acc, 4) * 100))

@@ -39,7 +39,7 @@ class Evaluator:
         http://www.tarekatwan.com/index.php/2017/12/how-to-plot-a-confusion-matrix-in-python/
         """
         plt.clf()
-        fig=plt.figure()
+        fig=plt.Figure()
         ax1=fig.add_subplot(1,2,1)
         ax2=fig.add_subplot(1,2,2)
         

@@ -83,7 +83,7 @@ class Evaluator:
                 logger.info(mt)
                 logger.info("false postive rate : %.2f%%" % ( round(fp / float(fp + tn), 4) * 100))
                 logger.info("false negative rate : %.2f%%" % ( round(fn / float(fn + tp), 4) * 100))
-                
+                logger.info("Matthews correlation coefficient: %.2f%%" % ((tp*tn-fp*fn)/float(((tp+fp)*(tp+fn)*(tn+fp)*(tn+fn))**0.5)))
                 # run plot
                 self.plot(mt)
 

@@ -79,13 +79,21 @@ class Evaluator:
                 #get and print matrix
                 tn, fp, fn, tp = confusion_matrix(y, ypred).ravel()
                 mt = np.array([[tp, fp],[fn, tn]])
+                acc=float((tp+tn)/(tp+fn+fp+tn))
+                Precision=float((tp)/(tp+fp))
+                Recall=float((tp)/(tp+fn))
                 MCC= ((tp*tn-fp*fn)/float(((tp+fp)*(tp+fn)*(tn+fp)*(tn+fn))**0.5))
                 F1_score=((2*tp)/float(2*tp+fp+fn))
+
                 logger.info(mt)
+                logger.info("(MCC)Matthews correlation coefficient \n [-1 ~ +1] +1 is best!! score 0 means random classifier")
+                logger.info("(nMCC)normalized Matthews correlation coefficient \n [0~1] 1 is best!! 0.5 means random classifier")
+                logger.info("Accuracy : %.2f%%" % ( round(acc, 4) * 100))
+                logger.info('Precision and Recall are trade-off Precis : Recal = %.2f%% : %.2f%%' % ( (round(Precision, 4) * 100), (round(Recall, 4) * 100)))
                 logger.info("false postive rate : %.2f%%" % ( round(fp / float(fp + tn), 4) * 100))
                 logger.info("false negative rate : %.2f%%" % ( round(fn / float(fn + tp), 4) * 100))
-                logger.info("Matthews correlation coefficient [-1 ~ +1] +1 is best!! score 0.5 means random classifier : %.2f" % (MCC))
-                logger.info("normalized Matthews correlation coefficient [0~1] 1 is best!! 0.5 means random classifier: %.2f" % ((MCC+1)/2))
+                logger.info("MCC : %.2f" % (MCC))
+                logger.info("nMCC: %.2f" % ((MCC+1)/2))
                 logger.info("F1 score: %.2f" % (F1_score))
                 # run plot
                 self.plot(mt)

@@ -36,16 +36,12 @@ def readonelineFromjson(jsonlpath):
 
 class FeatureType:
     def __init__(self):
-        self.names = {
-            'histogram': features.ByteHistogram(),
-            'byteentropy': features.ByteEntropyHistogram(),
-            'section': features.SectionInfo(),
-            'imports': features.ImportsInfo(),
-            'exports': features.ExportsInfo(),
-            'general': features.GeneralFileInfo(),
-            'header': features.HeaderFileInfo(),
-            'strings': features.StringExtractor()
-        }
+        self.names ={}
+        for i,v in zip(range(len(features.FEATURE_TPYE_LIST)),features.FEATURE_TPYE_LIST):
+            #new_attr_name='Fe'+v+'ChkBox'
+            #new_attr=self.__getattribute__(new_attr_name)
+            func=getattr(features,v)
+            self.names[v]=func()
 
     def parsing(self, lists):
         """

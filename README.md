@@ -21,6 +21,7 @@ H. Anderson and P. Roth, "EMBER: An Open Dataset for Training Static PE Malware 
 ```  
 
 <br />
+
 # features.py 편집방법:
 
 1 : FeatureType을 상속받아 새로운 특징클래스생성 

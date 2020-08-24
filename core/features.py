@@ -41,7 +41,8 @@ FEATURE_TPYE_LIST=[
               'GeneralFileInfo',
               'HeaderFileInfo',
               'StringExtractor',
-              "ParsingWarning"
+              "ParsingWarning",
+              "IsPacked"
 ]
 
 class FeatureType(object):
@@ -495,7 +496,35 @@ class ParsingWarning(FeatureType):
         return np.asarray([
             raw_obj['has_warning'],raw_obj['warnings']],dtype=np.float32
         )
+class IsPacked(FeatureType):
+    """ packed 되었는지 추측 Packed_PE_File_Detection_for_Malware_Forensics 참고"""
 
+    name = 'packed'
+    dim = 1
+
+    def __init__(self): #생성자
+        super(FeatureType, self).__init__()#상속받기
+
+    def raw_features(self, bytez, lief_and_pefile):
+        lief_binary,pe=lief_and_pefile
+        if pe.get_section_by_rva(pe.OPTIONAL_HEADER.AddressOfEntryPoint) != None:
+          enter_sect=pe.get_section_by_rva(pe.OPTIONAL_HEADER.AddressOfEntryPoint)
+          if  enter_sect.IMAGE_SCN_MEM_EXECUTE and enter_sect.IMAGE_SCN_MEM_WRITE and enter_sect.get_entropy() >=6.85:
+            return 1
+        elif pe.is_dll() :
+          for sect in pe.sections:
+            if sect.IMAGE_SCN_MEM_EXECUTE and sect.get_entropy()>=6.85:
+              return 1
+        else:
+          for sect in pe.sections:
+            if hasattr(sect,'IMAGE_SCN_MEM_EXECUTE') and hasattr(sect,'IMAGE_SCN_MEM_WRITE') and sect.get_entropy()>=6.85:
+              return 1
+        return 0
+    def process_raw_features(self, raw_obj):#추출한 값 가공
+        #raw_obj =>raw_features에서 반환하는 값
+        #가공과정
+        return raw_obj
+        
 def GenerateTime(lief_binary):
     fileheader = lief_binary.header
     timestamp = time.gmtime(fileheader.time_date_stamps)

@@ -595,7 +595,7 @@ class Ui_MainWindow(QWidget):
         evaluate.run()
 
 if __name__ == "__main__":
-    print("hoo's: revision NUMBER:2020.08.22 16:10")
+    print("hoo's: revision NUMBER:2020.08.42 18:42")
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()

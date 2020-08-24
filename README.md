@@ -31,7 +31,7 @@ H. Anderson and P. Roth, "EMBER: An Open Dataset for Training Static PE Malware 
 class 새로운특징(FeatureType):
     """ 설명"""
 
-    name = '알아보기쉬운 이름'
+    name = '클래스명과 반드시 동일'
     dim = 출력물의 차원수
 
     def __init__(self): #생성자

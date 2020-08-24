@@ -499,7 +499,7 @@ class ParsingWarning(FeatureType):
 class IsPacked(FeatureType):
     """ packed 되었는지 추측 Packed_PE_File_Detection_for_Malware_Forensics 참고"""
 
-    name = 'packed'
+    name = 'IsPacked'
     dim = 1
 
     def __init__(self): #생성자

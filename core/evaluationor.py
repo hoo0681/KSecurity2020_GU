@@ -44,7 +44,11 @@ class Evaluator:
         """
         http://www.tarekatwan.com/index.php/2017/12/how-to-plot-a-confusion-matrix-in-python/
         """
-        plt.clf()
+        #plt.clf()
+        plt.ion()
+        plt.close(1)
+        plt.close(2)
+
         plt.figure(1)
         plt.imshow(cm, interpolation='nearest', cmap=plt.cm.binary)
         classNames = ['Malware','Beign']

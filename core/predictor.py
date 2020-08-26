@@ -45,7 +45,7 @@ class Predictor:
         err = 0
         end = len(next(os.walk(self.testdir))[2])
 
-        for sample in tqdm.tqdm(utility.directory_generator(self.testdir), total=end):
+        for sample in tqdm.tqdm(utility.directory_generator(self.testdir),position=0, leave=True,ascii=True, total=end):
             fullpath = os.path.join(self.testdir, sample)
 
             if os.path.isfile(fullpath):

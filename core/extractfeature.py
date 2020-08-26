@@ -46,7 +46,8 @@ class Extractor:
         fullpath = os.path.join(os.path.join(self.datadir, sample))
         try:
             binary = open(fullpath, 'rb').read()
-            feature = extractor.raw_features(binary)
+            #feature = extractor.raw_features(binary)
+            feature = extractor.feature_vector(binary)
             feature.update({"sha256": sample}) # sample name(hash)
             feature.update({"label" : self.data[self.data.hash==sample].values[0][1]}) #label
 

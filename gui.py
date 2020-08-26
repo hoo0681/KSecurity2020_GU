@@ -21,6 +21,11 @@ features.py >>
 2020-08-26 업데이트 matplotlib가 backend로 tkinter를 사용하는데 곳곳에
  있는 multiprocessing과 충돌이 일어난것으로 보고 backend를 pyqt5로 변경함 
  또한 진행바를 ascii로 표시하게 하였음
+
+추가예정: tensorflow model 가능하도록 세팅
+사용 가능한 모델 종류가 ui에 자동 반영되도록
+모델 평가자료 비교기능
+
 """
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QFileDialog, QLabel, QPushButton, QCheckBox

@@ -83,7 +83,7 @@ class Evaluator:
 
         if len(self.labeldata) == end:
             try:
-                for idx, row in tqdm.tqdm(self.testdata.iterrows(), total=end):
+                for idx, row in tqdm.tqdm(self.testdata.iterrows(),position=0, leave=True,ascii=True, total=end):
                     _name = row['hash']
                     r = self.labeldata[self.labeldata.hash==_name].values[0][1]
                     y.append(r)

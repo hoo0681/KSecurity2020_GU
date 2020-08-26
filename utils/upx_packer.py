@@ -14,7 +14,7 @@ if not os.path.exists(args.datadir):
 if not os.path.exists(args.output):
     os.makedirs(args.output)
 
-for _file in tqdm.tqdm(os.listdir(args.datadir)):
+for _file in tqdm.tqdm(os.listdir(args.datadir),position=0, leave=True,ascii=True):
     path = os.path.join(args.datadir, _file)
     output = os.path.join(args.output, _file)
 

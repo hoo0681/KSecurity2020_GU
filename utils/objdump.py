@@ -20,7 +20,7 @@ def multiplepipe():
     #sample = '/home/kisa/Documents/objdump/000aadad7b6e9316638e920f863855e7.vir'
     trainsetpath = '/home/kisa/Documents/trainset'
 
-    for sample in tqdm.tqdm(os.listdir(trainsetpath)):    
+    for sample in tqdm.tqdm(os.listdir(trainsetpath),position=0, leave=True,ascii=True):    
         sample = os.path.join(trainsetpath, sample)
         p1_params = ["objdump -d {0} | awk -F '[\t]' '{{print $3}}' | awk -F ' ' '{{print $1}}'".format(sample)]
         p1 = subprocess.Popen(p1_params, stdout=subprocess.PIPE, shell=True)

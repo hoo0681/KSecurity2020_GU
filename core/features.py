@@ -28,7 +28,8 @@ import time
 import pandas as pd
 from . import utility
 import logging
-
+from concurrent.futures import ThreadPoolExecutor
+import concurrent.futures
 LIEF_MAJOR, LIEF_MINOR, _ = lief.__version__.split('.')
 LIEF_EXPORT_OBJECT = int(LIEF_MAJOR) > 0 or ( int(LIEF_MAJOR)==0 and int(LIEF_MINOR) >= 10 )
 
@@ -536,7 +537,10 @@ class PEFeatureExtractor(object):
         self.features = featurelist
         if dim == 0:
             self.dim = sum([fe.dim for fe in self.features])
-
+    def unpack(self,arg):
+        (func,bytez,pe_info)=arg
+        return func(bytez,pe_info)
+        
     def raw_features(self, bytez):
         try:
             lief_binary = lief.PE.parse(list(bytez))
@@ -546,10 +550,21 @@ class PEFeatureExtractor(object):
         except Exception as e:  # everything else (KeyboardInterrupt, SystemExit, ValueError):
             raise
         lief_and_pefile=(lief_binary,pe)
+        
         features = {"appeared" : GenerateTime(lief_binary)} #appeared
-        features.update({fe.name: fe.raw_features(bytez, lief_and_pefile) for fe in self.features})
+        thread_list = []
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            for fe in self.features:
+                packed_arg=(fe.raw_features,bytez, lief_and_pefile)
+                callables=executor.submit(self.unpack, packed_arg)
+                thread_list.append(callables)
+                features.update({fe.name:callables})
+            #print(concurrent.futures.wait(thread_list))
+            for fe in self.features:
+                features[fe.name]=features[fe.name].result()
+        #features.update({fe.name: fe.raw_features(bytez, lief_and_pefile) for fe in self.features})
         return features
-
+    
     def process_raw_features(self, raw_obj):
         feature_vectors = [fe.process_raw_features(raw_obj[fe.name]) for fe in self.features]
         return np.hstack(feature_vectors).astype(np.float32)

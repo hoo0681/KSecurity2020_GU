@@ -13,13 +13,13 @@ import numpy as np
 import argparse
 import tqdm
 import os
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import logging
 import itertools
-import matplotlib
+#import matplotlib
 #matplotlib.use('QT5Agg')
 
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 #from matplotlib.backends.backend_qt5agg import FigureCanvas 
 #from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 
@@ -45,9 +45,9 @@ class Evaluator:
         http://www.tarekatwan.com/index.php/2017/12/how-to-plot-a-confusion-matrix-in-python/
         """
         plt.clf()
-        plt.ion()
-        plt.close(1)
-        plt.close(2)
+        #plt.ion()
+        #plt.close(1)
+        #plt.close(2)
 
         plt.figure(1)
         plt.imshow(cm, interpolation='nearest', cmap=plt.cm.binary)

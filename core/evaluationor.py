@@ -44,7 +44,7 @@ class Evaluator:
         """
         http://www.tarekatwan.com/index.php/2017/12/how-to-plot-a-confusion-matrix-in-python/
         """
-        #plt.clf()
+        plt.clf()
         plt.ion()
         plt.close(1)
         plt.close(2)

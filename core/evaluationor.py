@@ -32,6 +32,7 @@ logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
 class Evaluator:
+    fig=None
     def __init__(self, testcsv, label):
         logger.debug("evaluator constructor Start")
         self.testdata = pd.read_csv(testcsv, names=['hash', 'y_pred']).sort_values(by=['hash'])
@@ -44,39 +45,47 @@ class Evaluator:
         """
         http://www.tarekatwan.com/index.php/2017/12/how-to-plot-a-confusion-matrix-in-python/
         """
-        plt.clf()
-        plt.ion()
-        plt.close(1)
-        plt.close(2)
+        #plt.clf()
+        #plt.ion()
+        #plt.close(1)
+        #plt.close(2)
 
-        plt.figure(1)
-        plt.imshow(cm, interpolation='nearest', cmap=plt.cm.binary)
+        self.fig=plt.Figure()
+        ax = self.fig.add_subplot(111)
+        im=ax.imshow(cm, interpolation='nearest', cmap=plt.cm.binary)
         classNames = ['Malware','Beign']
-        plt.title('Malware Detection')
-        plt.ylabel('Test')
-        plt.xlabel('Label')
-        plt.colorbar()
+        ax.set_title('Malware Detection')
+        ax.set_ylabel('Test')
+        ax.set_xlabel('Label')
+        plt.colorbar(im,ax=ax)
         tick_marks = np.arange(len(classNames))
-        plt.xticks(tick_marks, classNames, rotation=45)
-        plt.yticks(tick_marks, classNames)
+        ax.set_xticks(tick_marks)#tick_marks, classNames, rotation=45)
+        ax.set_yticks(tick_marks)#tick_marks, classNames)
+        ax.set_xticklabels(classNames, rotation=45 )
+        ax.set_yticklabels(classNames)
         s = [['TP','FP'], ['FN', 'TN']]
         
         fmt = 'd'
         thresh = cm.max() / 2.
         for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
-            plt.text(j, i, format(cm[i, j], fmt),
+            ax.text(j, i, format(cm[i, j], fmt),
                     horizontalalignment="center",
                     color="white" if cm[i, j] > thresh else "black")
-        plt.figure(2)
-        plt.plot(self.fpr,self.tpr,'o-',ms=2,label="Logistic Regression")
-        plt.plot([0, 1], [0, 1], 'k--', label="random guess")
-        #ax2.plot([fallout], [recall], 'ro', ms=10)
-        plt.xlabel('(Fall-Out)')
-        plt.ylabel('(Recall)')
-        plt.title('Receiver operating characteristic example')
-        plt.show()
+        #plt.figure(2)
+        #plt.plot(self.fpr,self.tpr,'o-',ms=2,label="Logistic Regression")
+        #plt.plot([0, 1], [0, 1], 'k--', label="random guess")
+        ##ax2.plot([fallout], [recall], 'ro', ms=10)
+        #plt.xlabel('(Fall-Out)')
+        #plt.ylabel('(Recall)')
+        #plt.title('Receiver operating characteristic example')
+        #plt.show()
+        self.canvas = FigureCanvas(self.fig)
+        self.canvas.draw()
+        self.canvas.show()
         
     def run(self):
+        #if self.fig:
+        #    self.fig.close()
         y = []
         ypred = self.testdata.y_pred
         end = len(self.testdata)
@@ -119,7 +128,8 @@ class Evaluator:
                 self.plot(mt)
 
             except:
-                logger.info("[Error] Please Check label file ****** ")
-                return
+                raise
+                #logger.info("[Error] Please Check label file ****** ")
+                #return
         else:
             logger.info("[Error] Please Check label file ****** ")

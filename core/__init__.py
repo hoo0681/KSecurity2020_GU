@@ -54,7 +54,7 @@ def vectorize_subset(X_path, y_path, raw_feature_paths, nrows, features, dim):
     pool = multiprocessing.Pool()
     argument_iterator = ((irow, raw_features_string, X_path, y_path, nrows, features, dim)
                          for irow, raw_features_string in enumerate(raw_feature_iterator(raw_feature_paths)))
-    for _ in tqdm.tqdm(pool.imap_unordered(vectorize_unpack, argument_iterator), total=nrows):
+    for _ in tqdm.tqdm(pool.imap_unordered(vectorize_unpack, argument_iterator),ascii=True, total=nrows):
         pass
 
 def create_vectorized_features(jsonlpath, data_dir, rows, features, dim):

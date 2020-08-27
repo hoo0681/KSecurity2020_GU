@@ -72,7 +72,7 @@ class Extractor:
         Note that total variable in tqdm.tqdm should be revised
         Currently, I think that It is not safely. Because, multiprocess pool try to do FILE I/O.
         """
-        pool = multiprocessing.Pool(4)
+        pool = multiprocessing.Pool(1)
         queue = multiprocessing.Queue()
         #queue.put('safe')
         end = len(next(os.walk(self.datadir))[2])

@@ -10,6 +10,7 @@ import pandas as pd
 import multiprocessing
 from . import utility
 import logging
+from concurrent.futures import ProcessPoolExecutor
 
 logger = logging.getLogger(__name__)
 
@@ -72,30 +73,45 @@ class Extractor:
         Note that total variable in tqdm.tqdm should be revised
         Currently, I think that It is not safely. Because, multiprocess pool try to do FILE I/O.
         """
-        pool = multiprocessing.Pool(4)
-        queue = multiprocessing.Queue()
-        queue.put('safe')
+        #pool = multiprocessing.Pool(4)
+        #queue = multiprocessing.Queue()
+        #queue.put('safe')
         end = len(next(os.walk(self.datadir))[2])
-        error = 0
+        #error = 0
         #tmp=[]
         extractor_iterator = ((sample) for idx, sample in enumerate(utility.directory_generator(self.datadir)))
-        with jsonlines.open(self.output, 'w') as f:
-            for x in tqdm.tqdm(pool.imap_unordered(self.extract_unpack, extractor_iterator),ascii=True, total=end):
-                if not x:
-                    """
-                    To input error class or function
-                    """
-                    #raise
-                    error += 1
-                    continue
-                #tmp.append(x)
-                msg = queue.get()
-                if msg == 'safe': 
-                    f.write(x)                
-                    queue.put('safe')
-            #for item in tmp:
-            #    f.write(item)
-        pool.close()
+        #with jsonlines.open(self.output, 'w') as f:
+        with ProcessPoolExecutor(max_workers=4) as pool:
+            with tqdm.tqdm(total=end,ascii=True) as progress:
+                futures = []
+
+                for file in extractor_iterator:
+                    future = pool.submit(self.extract_unpack, file)
+                    future.add_done_callback(lambda p: progress.update())
+                    futures.append(future)
+
+                results = []
+                for future_ in futures:
+                    result = future_.result()
+                    with jsonlines.open(self.output, 'w') as f:
+                        f.write(result)
+                    results.append(result)
+        #    for x in tqdm.tqdm(pool.imap_unordered(self.extract_unpack, extractor_iterator),ascii=True, total=end):
+        #        if not x:
+        #            """
+        #            To input error class or function
+        #            """
+        #            #raise
+        #            error += 1
+        #            continue
+        #        #tmp.append(x)
+        #        msg = queue.get()
+        #        if msg == 'safe': 
+        #            f.write(x)                
+        #            queue.put('safe')
+        #    #for item in tmp:
+        #    #    f.write(item)
+        #pool.close()
 
     def run(self):
         self.extractor_multiprocess()

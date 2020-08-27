@@ -60,7 +60,7 @@ class Predictor:
                     logger.error('{}: {} error is occuered'.format(sample, e))            
                     y_pred.append(0)
                     err += 1
-                    #raise
+                    raise
 
         y_pred = np.where(np.array(y_pred) > 0.5, 1, 0)
         series = OrderedDict([('hash', name),('y_pred', y_pred)])

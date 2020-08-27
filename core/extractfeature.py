@@ -55,7 +55,7 @@ class Extractor:
             sys.exit()
         except Exception as e:  
             logger.error('{}: {} error is occuered'.format(sample, e))            
-            #raise
+            raise
             return None
 
         return feature
@@ -85,7 +85,7 @@ class Extractor:
                     """
                     To input error class or function
                     """
-                   # raise
+                    raise
                     error += 1
                     continue
                 msg = queue.get()

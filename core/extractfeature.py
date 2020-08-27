@@ -80,7 +80,7 @@ class Extractor:
 
         extractor_iterator = ((sample) for idx, sample in enumerate(utility.directory_generator(self.datadir)))
         with jsonlines.open(self.output, 'w') as f:
-            for x in tqdm.tqdm(pool.imap_unordered(self.extract_unpack, extractor_iterator),position=0, leave=True,ascii=True, total=end):
+            for x in tqdm.tqdm(pool.imap_unordered(self.extract_unpack, extractor_iterator),ascii=True, total=end):
                 if not x:
                     """
                     To input error class or function

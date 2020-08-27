@@ -559,7 +559,8 @@ class PEFeatureExtractor(object):
                 callables=executor.submit(self.unpack, packed_arg)
                 thread_list.append(callables)
                 features.update({fe.name:callables})
-            #print(concurrent.futures.wait(thread_list))
+            #print()
+            concurrent.futures.wait(thread_list)
             for fe in self.features:
                 features[fe.name]=features[fe.name].result()
         #features.update({fe.name: fe.raw_features(bytez, lief_and_pefile) for fe in self.features})

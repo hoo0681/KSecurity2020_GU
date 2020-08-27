@@ -19,7 +19,7 @@ import itertools
 import matplotlib
 matplotlib.use('QT5Agg')
 
-import matplotlib.pylab as plt
+import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvas 
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 

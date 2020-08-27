@@ -117,7 +117,7 @@ class Evaluator:
                 print("F1 score: %.2f" % (F1_score))
                 logger.info('******eval DONE******')
                 # run plot
-                self.plot(mt)
+                #self.plot(mt)
 
             except:
                 logger.info("[Error] Please Check label file ****** ")

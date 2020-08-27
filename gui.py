@@ -26,6 +26,9 @@ features.py >>
 사용 가능한 모델 종류가 ui에 자동 반영되도록
 모델 평가자료 비교기능
 
+
+2020-08-27 업데이트 pyqt를 사용했더니 심각한 오류가 발생해서 되돌림
+멀티프로세스, 멀티스레드 적용함 에러는 raise되도록 함
 """
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QFileDialog, QLabel, QPushButton, QCheckBox

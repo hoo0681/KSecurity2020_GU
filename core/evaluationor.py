@@ -17,11 +17,11 @@ import os
 import logging
 import itertools
 import matplotlib
-matplotlib.use('QT5Agg')
+#matplotlib.use('QT5Agg')
 
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_qt5agg import FigureCanvas 
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+#from matplotlib.backends.backend_qt5agg import FigureCanvas 
+#from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 
 logger = logging.getLogger('Evaluating')
 handler = logging.StreamHandler()

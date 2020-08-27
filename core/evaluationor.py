@@ -13,11 +13,12 @@ import numpy as np
 import argparse
 import tqdm
 import os
+import sys
 import matplotlib.pyplot as plt
 import logging
 import itertools
 import matplotlib
-#matplotlib.use('QT5Agg')
+matplotlib.use('QT5Agg')
 
 #import matplotlib.pyplot as plt
 #from matplotlib.backends.backend_qt5agg import FigureCanvas 
@@ -74,7 +75,7 @@ class Evaluator:
         plt.xlabel('(Fall-Out)')
         plt.ylabel('(Recall)')
         plt.title('Receiver operating characteristic example')
-        plt.show()
+        sys.exit(plt.show())
         
     def run(self):
         y = []

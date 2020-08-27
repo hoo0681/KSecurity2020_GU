@@ -85,6 +85,7 @@ class Extractor:
                     """
                     To input error class or function
                     """
+                   # raise
                     error += 1
                     continue
                 msg = queue.get()

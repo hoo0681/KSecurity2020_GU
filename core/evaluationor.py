@@ -18,7 +18,7 @@ import matplotlib.pyplot as plt
 import logging
 import itertools
 import matplotlib
-#matplotlib.use('QT5Agg')
+matplotlib.use('agg')
 
 #import matplotlib.pyplot as plt
 #from matplotlib.backends.backend_qt5agg import FigureCanvas 

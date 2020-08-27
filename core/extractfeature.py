@@ -55,7 +55,7 @@ class Extractor:
             sys.exit()
         except Exception as e:  
             logger.error('{}: {} error is occuered'.format(sample, e))            
-            raise
+            #raise
             return None
 
         return feature
@@ -74,10 +74,10 @@ class Extractor:
         """
         pool = multiprocessing.Pool(4)
         queue = multiprocessing.Queue()
-        queue.put('safe')
+        #queue.put('safe')
         end = len(next(os.walk(self.datadir))[2])
         error = 0
-
+        tmp=[]
         extractor_iterator = ((sample) for idx, sample in enumerate(utility.directory_generator(self.datadir)))
         with jsonlines.open(self.output, 'w') as f:
             for x in tqdm.tqdm(pool.imap_unordered(self.extract_unpack, extractor_iterator),ascii=True, total=end):
@@ -85,14 +85,16 @@ class Extractor:
                     """
                     To input error class or function
                     """
-                    raise
+                    #raise
                     error += 1
                     continue
-                msg = queue.get()
-                if msg == 'safe': 
-                    f.write(x)                
-                    queue.put('safe')
-
+                tmp.append(x)
+                #msg = queue.get()
+                #if msg == 'safe': 
+                #    f.write(x)                
+                #    queue.put('safe')
+            for item in tmp:
+                f.write(item)
         pool.close()
 
     def run(self):

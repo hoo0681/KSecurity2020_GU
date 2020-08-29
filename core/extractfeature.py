@@ -93,7 +93,7 @@ class Extractor:
                 results = []
                 for future_ in futures:
                     result = future_.result()
-                    with jsonlines.open(self.output, 'w') as f:
+                    with jsonlines.open(self.output, 'a') as f:
                         f.write(result)
                     results.append(result)
         #    for x in tqdm.tqdm(pool.imap_unordered(self.extract_unpack, extractor_iterator),ascii=True, total=end):

@@ -483,15 +483,15 @@ class ParsingWarning(FeatureType):
         #일련의 바이트를 정해진 타입에 맞게 잘라 배열로 변환후 빈도 계산
         _,pe=lief_and_pefile
         if len(pe.get_warnings())==0:
-          return {
-              'has_warning':0,
-              'warnings':0
-          }
+            return {
+                'has_warning':0,
+                'warnings':0
+            }
         else:
-          return {
-              'has_warning':1,
-              'warnings':len(pe.get_warnings())
-          }
+            return {
+                'has_warning':1,
+                'warnings':len(pe.get_warnings())
+            }
         
     def process_raw_features(self, raw_obj):
         return np.asarray([
@@ -509,17 +509,17 @@ class IsPacked(FeatureType):
     def raw_features(self, bytez, lief_and_pefile):
         lief_binary,pe=lief_and_pefile
         if pe.get_section_by_rva(pe.OPTIONAL_HEADER.AddressOfEntryPoint) != None:
-          enter_sect=pe.get_section_by_rva(pe.OPTIONAL_HEADER.AddressOfEntryPoint)
-          if  enter_sect.IMAGE_SCN_MEM_EXECUTE and enter_sect.IMAGE_SCN_MEM_WRITE and enter_sect.get_entropy() >=6.85:
-            return 1
+            enter_sect=pe.get_section_by_rva(pe.OPTIONAL_HEADER.AddressOfEntryPoint)
+            if  enter_sect.IMAGE_SCN_MEM_EXECUTE and enter_sect.IMAGE_SCN_MEM_WRITE and enter_sect.get_entropy() >=6.85:
+                return 1
         elif pe.is_dll() :
-          for sect in pe.sections:
-            if sect.IMAGE_SCN_MEM_EXECUTE and sect.get_entropy()>=6.85:
-              return 1
+            for sect in pe.sections:
+                if sect.IMAGE_SCN_MEM_EXECUTE and sect.get_entropy()>=6.85:
+                    return 1
         else:
-          for sect in pe.sections:
-            if hasattr(sect,'IMAGE_SCN_MEM_EXECUTE') and hasattr(sect,'IMAGE_SCN_MEM_WRITE') and sect.get_entropy()>=6.85:
-              return 1
+            for sect in pe.sections:
+                if hasattr(sect,'IMAGE_SCN_MEM_EXECUTE') and hasattr(sect,'IMAGE_SCN_MEM_WRITE') and sect.get_entropy()>=6.85:
+                    return 1
         return 0
     def process_raw_features(self, raw_obj):#추출한 값 가공
         #raw_obj =>raw_features에서 반환하는 값
@@ -545,7 +545,10 @@ class PEFeatureExtractor(object):
         try:
             lief_binary = lief.PE.parse(list(bytez))
             pe=pefile.PE(data=bytez)
-        except (lief.bad_format, lief.bad_file, lief.pe_error, lief.parser_error, RuntimeError) as e:
+        except (lief.bad_file, lief.pe_error, lief.parser_error, RuntimeError) as e:
+            raise
+        except lief.bad_format as e:
+            return None
             raise
         except Exception as e:  # everything else (KeyboardInterrupt, SystemExit, ValueError):
             raise

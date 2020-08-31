@@ -38,6 +38,8 @@ class Extractor:
         self.data = pd.read_csv(label, names=['hash', 'y'])
         self.features = features
 
+        self.errorFile=[]
+
     def extract_features(self, sample):
         """
         Extract features.
@@ -55,8 +57,9 @@ class Extractor:
         except KeyboardInterrupt:
             sys.exit()
         except Exception as e:  
-            logger.error('{}: {} error is occuered'.format(sample, e))            
-            raise
+            logger.error('{}: {} error is occuered'.format(sample, e))
+            self.errorFile.append(sample)
+            #raise
             return None
 
         return feature
@@ -80,7 +83,8 @@ class Extractor:
         #error = 0
         #tmp=[]
         extractor_iterator = ((sample) for idx, sample in enumerate(utility.directory_generator(self.datadir)))
-        #with jsonlines.open(self.output, 'w') as f:
+        with jsonlines.open(self.output, 'w') as f:
+            pass
         with ProcessPoolExecutor(max_workers=4) as pool:
             with tqdm.tqdm(total=end,ascii=True) as progress:
                 futures = []
@@ -89,13 +93,12 @@ class Extractor:
                     future = pool.submit(self.extract_unpack, file)
                     future.add_done_callback(lambda p: progress.update())
                     futures.append(future)
-
-                results = []
+#                results = []
                 for future_ in futures:
                     result = future_.result()
                     with jsonlines.open(self.output, 'a') as f:
                         f.write(result)
-                    results.append(result)
+#                        results.append(result)
         #    for x in tqdm.tqdm(pool.imap_unordered(self.extract_unpack, extractor_iterator),ascii=True, total=end):
         #        if not x:
         #            """
@@ -115,3 +118,6 @@ class Extractor:
 
     def run(self):
         self.extractor_multiprocess()
+        with open("./file.txt", 'w') as output:
+            for row in self.errorFile:
+                output.write(str(row) + '\n')

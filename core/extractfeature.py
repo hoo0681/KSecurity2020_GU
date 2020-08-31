@@ -37,9 +37,6 @@ class Extractor:
         self.output = output
         self.data = pd.read_csv(label, names=['hash', 'y'])
         self.features = features
-
-        self.errorFile=[]
-
     def extract_features(self, sample):
         """
         Extract features.
@@ -58,7 +55,6 @@ class Extractor:
             sys.exit()
         except Exception as e:  
             logger.error('{}: {} error is occuered'.format(sample, e))
-            self.errorFile.append(sample)
             #raise
             return None
 
@@ -115,9 +111,6 @@ class Extractor:
         #    #for item in tmp:
         #    #    f.write(item)
         #pool.close()
-
     def run(self):
         self.extractor_multiprocess()
-        with open("./file.txt", 'w') as output:
-            for row in self.errorFile:
-                output.write(str(row) + '\n')
+        

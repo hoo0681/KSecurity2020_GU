@@ -91,7 +91,7 @@ class Ui_MainWindow(QWidget):
             new_attr_name='Fe'+v+'ChkBox'
             self.__setattr__(new_attr_name,QtWidgets.QCheckBox(self.tab))
             new_attr=self.__getattribute__(new_attr_name)
-            new_attr.setGeometry(QtCore.QRect(30+(170*((i)//3)), 150+(30*((i+3)%3)), 151, 22))
+            new_attr.setGeometry(QtCore.QRect(30+(170*((i)//7)), 130+(20*((i+7)%7)), 151, 22))
             new_attr.setChecked(True)
             new_attr.setObjectName(new_attr_name)
 

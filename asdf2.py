@@ -3,10 +3,10 @@ from sklearn.preprocessing import MinMaxScaler,minmax_scale\
         QuantileTransformer,PowerTransformer
 import pandas as pd
 import numpy as np
-class MalwareImg_IC(FeatureType):
+class IMG_IC(FeatureType):
     """ 설명"""
 
-    name = 'MalwareImg_IC'
+    name = 'IMG_IC'
     dim = 256*256*10
 
     def __init__(self): #생성자

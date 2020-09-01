@@ -47,7 +47,16 @@ FEATURE_TPYE_LIST=[
               'StringExtractor',
               "ParsingWarning",
               "IsPacked",
-              "MalwareImg_IC"
+              "IMG_IC_origin",
+              "IMG_IC_log",
+              "IMG_IC_standard_scaling",
+              "IMG_IC_MinMax_scaling",
+              "IMG_IC_MaxAbs_scaling",
+              "IMG_IC_Robust_scaling",
+              "IMG_IC_normal_QuantileTransformer",
+              "IMG_IC_uniform_QuantileTransformer"
+
+
 ]
 
 class FeatureType(object):
@@ -74,7 +83,6 @@ class FeatureType(object):
         if there are significant speedups to be gained from combining the two functions. '''
         return self.process_raw_features(self.raw_features(bytez, lief_and_pefile))
 
-
 class ByteHistogram(FeatureType):
     ''' Byte histogram (count + non-normalized) over the entire binary file '''
 
@@ -93,7 +101,6 @@ class ByteHistogram(FeatureType):
         sum = counts.sum()
         normalized = counts / sum
         return normalized
-
 
 class ByteEntropyHistogram(FeatureType):
     ''' 2d byte/entropy histogram based loosely on (Saxe and Berlin, 2015).
@@ -147,7 +154,6 @@ class ByteEntropyHistogram(FeatureType):
         sum = counts.sum()
         normalized = counts / sum
         return normalized
-
 
 class SectionInfo(FeatureType):
     ''' Information about section names, sizes and entropy.  Uses hashing trick
@@ -219,7 +225,6 @@ class SectionInfo(FeatureType):
             characteristics_hashed
         ]).astype(np.float32)
 
-
 class ImportsInfo(FeatureType):
     ''' Information about imported libraries and functions from the
     import address table.  Note that the total number of imported
@@ -261,7 +266,6 @@ class ImportsInfo(FeatureType):
         # Two separate elements: libraries (alone) and fully-qualified names of imported functions
         return np.hstack([libraries_hashed, imports_hashed]).astype(np.float32)
 
-
 class ExportsInfo(FeatureType):
     ''' Information about exported functions. Note that the total number of exported
     functions is contained in GeneralFileInfo.
@@ -288,7 +292,6 @@ class ExportsInfo(FeatureType):
     def process_raw_features(self, raw_obj):
         exports_hashed = FeatureHasher(128, input_type="string").transform([raw_obj]).toarray()[0]
         return exports_hashed.astype(np.float32)
-
 
 class GeneralFileInfo(FeatureType):
     ''' General information about the file '''
@@ -336,7 +339,6 @@ class GeneralFileInfo(FeatureType):
                 raw_obj['symbols']
             ],
             dtype=np.float32)
-
 
 class HeaderFileInfo(FeatureType):
     ''' Machine, architecure, OS, linker and other information extracted from header '''
@@ -413,7 +415,6 @@ class HeaderFileInfo(FeatureType):
             raw_obj['optional']['sizeof_headers'],
             raw_obj['optional']['sizeof_heap_commit'],
         ]).astype(np.float32)
-
 
 class StringExtractor(FeatureType):
     ''' Extracts strings from raw byte stream '''
@@ -534,11 +535,11 @@ def GenerateTime(lief_binary):
     fileheader = lief_binary.header
     timestamp = time.gmtime(fileheader.time_date_stamps)
     return time.strftime('%Y-%m', timestamp)
-class MalwareImg_IC(FeatureType):
+class IMG_IC_origin(FeatureType):
     """ 설명"""
 
-    name = 'MalwareImg_IC'
-    dim = 256*256*10
+    name = 'IMG_IC_origin'
+    dim = 256*256
 
     def __init__(self): #생성자
         super(FeatureType, self).__init__()#상속받기
@@ -550,24 +551,188 @@ class MalwareImg_IC(FeatureType):
         for x,y in zip(source[::1],source[1::1]):
             image[x,y]+=1
         X=image#.astype(np.uint8)
-        distributions = [
-            ['Unscaled data', X],
-            ['log scaled data',np.log(X+1)],
-            ['Data after standard scaling', StandardScaler().fit_transform(X)],
-            ['Data after min-max scaling', MinMaxScaler().fit_transform(X)],
-            ['Data after max-abs scaling', MaxAbsScaler().fit_transform(X)],
-            ['Data after robust scaling', RobustScaler(quantile_range=(25, 75)).fit_transform(X)],
-            ['Data after power transformation (Yeo-Johnson)',PowerTransformer(method='yeo-johnson').fit_transform(X)],
-            ['Data after quantile transformation (gaussian pdf)', QuantileTransformer(output_distribution='normal',n_quantiles=256).fit_transform(X)],
-            ['Data after quantile transformation (uniform pdf)',QuantileTransformer(output_distribution='uniform',n_quantiles=256).fit_transform(X)],
-            ['Data after sample-wise L2 normalizing',Normalizer().fit_transform(X)],
-        ]
-#inofzip=np.transpose(np.stack([ i[1] for i in distributions]))
-        inofzip=(np.stack([ i[1] for i in distributions]))
+        return {'malimg':X.astype(np.uint8).tolist()}
+
+    def process_raw_features(self, raw_obj):#추출한 값 가공
+        return np.array(raw_obj['malimg']).flatten()
+        #return 모델에_넘겨줄_최종_데이터
+class IMG_IC_log(FeatureType):
+    """ 설명"""
+
+    name = 'IMG_IC_log'
+    dim = 256*256
+
+    def __init__(self): #생성자
+        super(FeatureType, self).__init__()#상속받기
+
+    def raw_features(self, bytez, lief_and_pefile):
+        lief_binary,pe=lief_and_pefile
+        source=bytearray(bytez)
+        image=np.zeros((256,256))
+        for x,y in zip(source[::1],source[1::1]):
+            image[x,y]+=1
+        X=image#.astype(np.uint8)
+        output=np.log(X+1)
+        
         #bytez => 파일내용 타입: byte 길이 : 가변적
         #lief_and_pefile => life와 pefile로 parse된 결과물, 타입: 튜플, 내용 : (life_binary,pe)
-        return inofzip
+        return {'malimg':output.astype(np.float32).tolist()}#이 내용이 기록됨
 
+    def process_raw_features(self, raw_obj):#추출한 값 가공  train,pridict전에 해당 과정을 거치고 들어감
+        #raw_obj =>raw_features에서 반환하는 값
+        #가공과정
+        return np.array(raw_obj['malimg']).flatten()
+        #return 모델에_넘겨줄_최종_데이터
+class IMG_IC_standard_scaling(FeatureType):
+    """ 설명"""
+
+    name = 'IMG_IC_standard_scaling'
+    dim = 256*256
+
+    def __init__(self): #생성자
+        super(FeatureType, self).__init__()#상속받기
+
+    def raw_features(self, bytez, lief_and_pefile):
+        lief_binary,pe=lief_and_pefile
+        source=bytearray(bytez)
+        image=np.zeros((256,256))
+        for x,y in zip(source[::1],source[1::1]):
+            image[x,y]+=1
+        X=image#.astype(np.uint8)
+        output=StandardScaler().fit_transform(X)        
+        #bytez => 파일내용 타입: byte 길이 : 가변적
+        #lief_and_pefile => life와 pefile로 parse된 결과물, 타입: 튜플, 내용 : (life_binary,pe)
+        return {'malimg':output.astype(np.float32).tolist()}
+
+    def process_raw_features(self, raw_obj):#추출한 값 가공
+        #raw_obj =>raw_features에서 반환하는 값
+        #가공과정
+        return np.array(raw_obj['malimg']).flatten()
+        #return 모델에_넘겨줄_최종_데이터
+class IMG_IC_MinMax_scaling(FeatureType):
+    """ 설명"""
+
+    name = 'IMG_IC_MinMax_scaling'
+    dim = 256*256
+
+    def __init__(self): #생성자
+        super(FeatureType, self).__init__()#상속받기
+
+    def raw_features(self, bytez, lief_and_pefile):
+        lief_binary,pe=lief_and_pefile
+        source=bytearray(bytez)
+        image=np.zeros((256,256))
+        for x,y in zip(source[::1],source[1::1]):
+            image[x,y]+=1
+        X=image#.astype(np.uint8)
+        output=MinMaxScaler().fit_transform(X)      
+        #bytez => 파일내용 타입: byte 길이 : 가변적
+        #lief_and_pefile => life와 pefile로 parse된 결과물, 타입: 튜플, 내용 : (life_binary,pe)
+        return {'malimg':output.astype(np.float32).tolist()}
+
+    def process_raw_features(self, raw_obj):#추출한 값 가공
+        #raw_obj =>raw_features에서 반환하는 값
+        #가공과정
+        return np.array(raw_obj['malimg']).flatten()
+        #return 모델에_넘겨줄_최종_데이터
+class IMG_IC_MaxAbs_scaling(FeatureType):
+    """ 설명"""
+
+    name = 'IMG_IC_MaxAbs_scaling'
+    dim = 256*256
+
+    def __init__(self): #생성자
+        super(FeatureType, self).__init__()#상속받기
+
+    def raw_features(self, bytez, lief_and_pefile):
+        lief_binary,pe=lief_and_pefile
+        source=bytearray(bytez)
+        image=np.zeros((256,256))
+        for x,y in zip(source[::1],source[1::1]):
+            image[x,y]+=1
+        X=image#.astype(np.uint8)
+        output=MaxAbsScaler().fit_transform(X)        
+        #bytez => 파일내용 타입: byte 길이 : 가변적
+        #lief_and_pefile => life와 pefile로 parse된 결과물, 타입: 튜플, 내용 : (life_binary,pe)
+        return {'malimg':output.astype(np.float32).tolist()}
+
+    def process_raw_features(self, raw_obj):#추출한 값 가공
+        #raw_obj =>raw_features에서 반환하는 값
+        #가공과정
+        return np.array(raw_obj['malimg']).flatten()
+        #return 모델에_넘겨줄_최종_데이터
+class IMG_IC_Robust_scaling(FeatureType):
+    """ 설명"""
+
+    name = 'IMG_IC_Robust_scaling'
+    dim = 256*256
+
+    def __init__(self): #생성자
+        super(FeatureType, self).__init__()#상속받기
+
+    def raw_features(self, bytez, lief_and_pefile):
+        lief_binary,pe=lief_and_pefile
+        source=bytearray(bytez)
+        image=np.zeros((256,256))
+        for x,y in zip(source[::1],source[1::1]):
+            image[x,y]+=1
+        X=image#.astype(np.uint8)
+        output=RobustScaler(quantile_range=(25, 75)).fit_transform(X)    
+        #bytez => 파일내용 타입: byte 길이 : 가변적
+        #lief_and_pefile => life와 pefile로 parse된 결과물, 타입: 튜플, 내용 : (life_binary,pe)
+        return {'malimg':output.astype(np.float32).tolist()}
+
+    def process_raw_features(self, raw_obj):#추출한 값 가공
+        #raw_obj =>raw_features에서 반환하는 값
+        #가공과정
+        return np.array(raw_obj['malimg']).flatten()
+        #return 모델에_넘겨줄_최종_데이터
+class IMG_IC_normal_QuantileTransformer(FeatureType):
+    """ 설명"""
+
+    name = 'IMG_IC_normal_QuantileTransformer'
+    dim = 256*256
+
+    def __init__(self): #생성자
+        super(FeatureType, self).__init__()#상속받기
+
+    def raw_features(self, bytez, lief_and_pefile):
+        lief_binary,pe=lief_and_pefile
+        source=bytearray(bytez)
+        image=np.zeros((256,256))
+        for x,y in zip(source[::1],source[1::1]):
+            image[x,y]+=1
+        X=image#.astype(np.uint8)
+        output=QuantileTransformer(output_distribution='normal',n_quantiles=256).fit_transform(X)      
+        #bytez => 파일내용 타입: byte 길이 : 가변적
+        #lief_and_pefile => life와 pefile로 parse된 결과물, 타입: 튜플, 내용 : (life_binary,pe)
+        return {'malimg':output.astype(np.float32).tolist()}
+
+    def process_raw_features(self, raw_obj):#추출한 값 가공
+        #raw_obj =>raw_features에서 반환하는 값
+        #가공과정
+        raise
+        #return 모델에_넘겨줄_최종_데이터
+class IMG_IC_uniform_QuantileTransformer(FeatureType):
+    """ 설명"""
+
+    name = 'IMG_IC_uniform_QuantileTransformer'
+    dim = 256*256
+
+    def __init__(self): #생성자
+        super(FeatureType, self).__init__()#상속받기
+
+    def raw_features(self, bytez, lief_and_pefile):
+        lief_binary,pe=lief_and_pefile
+        source=bytearray(bytez)
+        image=np.zeros((256,256))
+        for x,y in zip(source[::1],source[1::1]):
+            image[x,y]+=1
+        X=image#.astype(np.uint8)
+        output=QuantileTransformer(output_distribution='uniform',n_quantiles=256).fit_transform(X)      
+        #bytez => 파일내용 타입: byte 길이 : 가변적
+        #lief_and_pefile => life와 pefile로 parse된 결과물, 타입: 튜플, 내용 : (life_binary,pe)
+        return {'malimg':output.astype(np.float32).tolist()}
     def process_raw_features(self, raw_obj):#추출한 값 가공
         #raw_obj =>raw_features에서 반환하는 값
         #가공과정
@@ -590,7 +755,7 @@ class PEFeatureExtractor(object):
         except (lief.bad_file, lief.pe_error, lief.parser_error, RuntimeError) as e:
             raise
         except lief.bad_format as e:
-            return None
+            #return None
             raise
         except Exception as e:  # everything else (KeyboardInterrupt, SystemExit, ValueError):
             raise

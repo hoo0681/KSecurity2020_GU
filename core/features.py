@@ -773,17 +773,17 @@ class PEFeatureExtractor(object):
         features = {"appeared" : GenerateTime(lief_binary)}
         #appeared
         thread_list = []
-        with ThreadPoolExecutor(max_workers=8) as executor:
-            for fe in self.features:
-                packed_arg=(fe.raw_features,bytez, lief_and_pefile)
-                callables=executor.submit(self.unpack, packed_arg)
-                thread_list.append(callables)
-                features.update({fe.name:callables})
-            #print()
-            concurrent.futures.wait(thread_list)
-            for fe in self.features:
-                features[fe.name]=features[fe.name].result()
-        #features.update({fe.name: fe.raw_features(bytez, lief_and_pefile) for fe in self.features})
+        #with ThreadPoolExecutor(max_workers=8) as executor:
+        #    for fe in self.features:
+        #        packed_arg=(fe.raw_features,bytez, lief_and_pefile)
+        #        callables=executor.submit(self.unpack, packed_arg)
+        #        thread_list.append(callables)
+        #        features.update({fe.name:callables})
+        #    #print()
+        #    concurrent.futures.wait(thread_list)
+        #    for fe in self.features:
+        #        features[fe.name]=features[fe.name].result()
+        features.update({fe.name: fe.raw_features(bytez, lief_and_pefile) for fe in self.features})
         return features
     
     def process_raw_features(self, raw_obj):

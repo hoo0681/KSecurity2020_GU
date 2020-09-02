@@ -489,8 +489,8 @@ class ParsingWarning(FeatureType):
         lief_binary,pe=lief_and_pefile
         if (pe is None) or (lief_binary is None):
             return {
-                'has_warning':0,
-                'warnings':0
+                'has_warning':1,
+                'warnings':1
             }
         if len(pe.get_warnings())==0:
             return {

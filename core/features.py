@@ -486,7 +486,12 @@ class ParsingWarning(FeatureType):
 
     def raw_features(self, bytez, lief_and_pefile):
         #일련의 바이트를 정해진 타입에 맞게 잘라 배열로 변환후 빈도 계산
-        _,pe=lief_and_pefile
+        lief_binary,pe=lief_and_pefile
+        if (pe is None) or (lief_binary is None):
+            return {
+                'has_warning':0,
+                'warnings':0
+            }
         if len(pe.get_warnings())==0:
             return {
                 'has_warning':0,
@@ -513,6 +518,8 @@ class IsPacked(FeatureType):
 
     def raw_features(self, bytez, lief_and_pefile):
         lief_binary,pe=lief_and_pefile
+        if (pe is None) or (lief_binary is None):
+            return 0
         if pe.get_section_by_rva(pe.OPTIONAL_HEADER.AddressOfEntryPoint) != None:
             enter_sect=pe.get_section_by_rva(pe.OPTIONAL_HEADER.AddressOfEntryPoint)
             if  enter_sect.IMAGE_SCN_MEM_EXECUTE and enter_sect.IMAGE_SCN_MEM_WRITE and enter_sect.get_entropy() >=6.85:
@@ -532,6 +539,8 @@ class IsPacked(FeatureType):
         return raw_obj
         
 def GenerateTime(lief_binary):
+    if lief_binary is None:
+        return time.strftime('%Y-%m', time.gmtime(0))
     fileheader = lief_binary.header
     timestamp = time.gmtime(fileheader.time_date_stamps)
     return time.strftime('%Y-%m', timestamp)
@@ -752,16 +761,17 @@ class PEFeatureExtractor(object):
         try:
             lief_binary = lief.PE.parse(list(bytez))
             pe=pefile.PE(data=bytez)
-        except (lief.bad_file, lief.pe_error, lief.parser_error, RuntimeError) as e:
-            raise
-        except lief.bad_format as e:
-            #return None
-            raise
+            
+        except ( lief.bad_format,lief.bad_file, lief.pe_error, lief.parser_error, RuntimeError) as e:
+            lief_binary=None
+            pe=None
+            #features = {"appeared" :None}
+#            raise 
         except Exception as e:  # everything else (KeyboardInterrupt, SystemExit, ValueError):
             raise
         lief_and_pefile=(lief_binary,pe)
-        
-        features = {"appeared" : GenerateTime(lief_binary)} #appeared
+        features = {"appeared" : GenerateTime(lief_binary)}
+         #appeared
         thread_list = []
         with ThreadPoolExecutor(max_workers=8) as executor:
             for fe in self.features:

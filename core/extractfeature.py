@@ -91,9 +91,9 @@ class Extractor:
                     nonpefiles.append(file)
                     #raise e
 
-        with jsonlines.open('../nonPefiles.json', 'w') as f:
+        with jsonlines.open('./nonPefiles.json', 'w') as f:
             f.write(nonpefiles)
-        logger.info('non-pe file : {}, pe file : {}, total :{}'.format(len(nonpefiles),len(pefiles),end))
+        print('non-pe file : {}, pe file : {}, total :{}'.format(len(nonpefiles),len(pefiles),end))
         extractor_iterator = ((sample) for idx, sample in enumerate(pefiles))
         #extractor_iterator = ((sample) for idx, sample in enumerate(utility.directory_generator(self.datadir)))
         

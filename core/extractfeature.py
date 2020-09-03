@@ -11,6 +11,7 @@ import multiprocessing
 from . import utility
 import logging
 import lief
+import pefile
 from concurrent.futures import ProcessPoolExecutor
 
 logger = logging.getLogger(__name__)
@@ -85,6 +86,7 @@ class Extractor:
             for file in files:
                 try:
                     lief.PE.parse(path+'/'+file)
+                    pefile.PE(path+'/'+file)
                     #lief.PE.parse(file)
                     pefiles.append(file)
                 except ( lief.bad_format,lief.bad_file, lief.pe_error, lief.parser_error, RuntimeError) as e:

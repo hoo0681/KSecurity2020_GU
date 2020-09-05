@@ -772,7 +772,7 @@ class PEFeatureExtractor(object):
         lief_and_pefile=(lief_binary,pe)
         features = {"appeared" : GenerateTime(lief_binary)}
         #appeared
-        thread_list = []
+        #thread_list = []
         #with ThreadPoolExecutor(max_workers=8) as executor:
         #    for fe in self.features:
         #        packed_arg=(fe.raw_features,bytez, lief_and_pefile)

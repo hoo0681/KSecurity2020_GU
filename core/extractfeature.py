@@ -11,8 +11,8 @@ import multiprocessing
 from . import utility
 import logging
 import gc
-#import lief
-#import pefile
+import lief
+import pefile
 from concurrent.futures import ProcessPoolExecutor
 
 logger = logging.getLogger(__name__)
@@ -48,7 +48,7 @@ class Extractor:
         extractor = PEFeatureExtractor(self.features)
         fullpath = os.path.join(os.path.join(self.datadir, sample))
         try:
-            binary = open(fullpath, 'rb').read()
+            binary = open(fullpath, 'rb').read().close()
             #feature = extractor.raw_features(binary)
             feature = extractor.raw_features(binary)
             feature.update({"sha256": sample}) # sample name(hash)
@@ -81,29 +81,30 @@ class Extractor:
         end = len(next(os.walk(self.datadir))[2])
         #error = 0
         #tmp=[]
-        #pefiles=[]
-        #nonpefiles=[]
-        #for path, dir_, files in os.walk(self.datadir):
-        #    for file in files:
-        #        try:
-        #            lief.PE.parse(path+'/'+file)
-        #            pefile.PE(path+'/'+file)
-        #            #lief.PE.parse(file)
-        #            pefiles.append(file)
-        #        except ( lief.bad_format,lief.bad_file, lief.pe_error, lief.parser_error, RuntimeError) as e:
-        #            nonpefiles.append(file)
-        #            #raise e
+        pefiles=[]
+        nonpefiles=[]
+        for path, dir_, files in os.walk(self.datadir):
+            for file in files:
+                try:
+                    lief.PE.parse(path+file)
+                    pefile.PE(path+file)
+                    #lief.PE.parse(file)
+                    pefiles.append(file)
+                except ( lief.bad_format,lief.bad_file, lief.pe_error, lief.parser_error, RuntimeError) as e:
+                    nonpefiles.append(file)
+                    #raise e
 #
         #with jsonlines.open('./nonPefiles.json', 'w') as f:
         #    f.write(nonpefiles)
-        #print('non-pe file : {}, pe file : {}, total :{}'.format(len(nonpefiles),len(pefiles),end))
-        #extractor_iterator = ((sample) for idx, sample in enumerate(pefiles))
-        extractor_iterator = ((sample) for idx, sample in enumerate(utility.directory_generator(self.datadir)))
+        print('non-pe file : {}, pe file : {}, total :{}'.format(len(nonpefiles),len(pefiles),end))
+        extractor_iterator = ((sample) for idx, sample in enumerate(pefiles))
+        #extractor_iterator = ((sample) for idx, sample in enumerate(utility.directory_generator(self.datadir)))
         
         with jsonlines.open(self.output, 'w') as f:
             with ProcessPoolExecutor(max_workers=4) as pool:
-                for x in tqdm.tqdm(pool.map(self.extract_unpack,extractor_iterator,chunksize=1),total=end,ascii=True) :
-                    f.write(x)
+                with tqdm.tqdm(total=len(pefiles),ascii=True) as progress:
+                    for x in pool.map(self.extract_unpack,extractor_iterator,chunksize=10):
+                        f.write(x)
                 #futures = []
                 #pool.map(self.extract_unpack,extractor_iterator,chunksize=1000)
                 #for file in extractor_iterator:
@@ -137,9 +138,9 @@ class Extractor:
         #    for key,val in i.items():
         #        print(key,': ',val)
         #    print("\n")
-        Sprint('GC start')
-        Sgc.collect()
-        Sprint('GC done')
+        print('GC start')
+        gc.collect()
+        print('GC done')
         #gclist=gc.get_stats()
         #for i in gclist:
         #    for key,val in i.items():

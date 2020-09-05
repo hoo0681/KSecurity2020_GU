@@ -101,22 +101,23 @@ class Extractor:
         extractor_iterator = ((sample) for idx, sample in enumerate(utility.directory_generator(self.datadir)))
         
         with jsonlines.open(self.output, 'w') as f:
-            with ProcessPoolExecutor(max_workers=4) as pool:
-                with tqdm.tqdm(total=end,ascii=True) as progress:
-                    for x in pool.map(self.extract_unpack,extractor_iterator,chunksize=10):
-                        f.write(x)
-                        progress.update()
-                #futures = []
+            pass
+        with ProcessPoolExecutor(max_workers=4) as pool:
+            with tqdm.tqdm(total=end,ascii=True) as progress:
+                #for x in pool.map(self.extract_unpack,extractor_iterator,chunksize=10):
+                #    f.write(x)
+                #    progress.update()
+                futures = []
                 #pool.map(self.extract_unpack,extractor_iterator,chunksize=1000)
-                #for file in extractor_iterator:
-                #    future = pool.submit(self.extract_unpack, file)
-                #    future.add_done_callback(lambda p: progress.update())
-                #    futures.append(future)
-#                results = []
-                #for future_ in futures:
-                #    result = future_.result()
-                #    with jsonlines.open(self.output, 'a') as f:
-                #        f.write(result)
+                for file in extractor_iterator:
+                    future = pool.submit(self.extract_unpack, file)
+                    future.add_done_callback(lambda p: progress.update())
+                    futures.append(future)
+#               results = []
+                for future_ in futures:
+                    result = future_.result()
+                    with jsonlines.open(self.output, 'a') as f:
+                        f.write(result)
 #                        results.append(result)
         #    for x in tqdm.tqdm(pool.imap_unordered(self.extract_unpack, extractor_iterator),ascii=True, total=end):
         #        if not x:

@@ -10,8 +10,8 @@ import pandas as pd
 import multiprocessing
 from . import utility
 import logging
-import lief
-import pefile
+#import lief
+#import pefile
 from concurrent.futures import ProcessPoolExecutor
 
 logger = logging.getLogger(__name__)
@@ -80,29 +80,29 @@ class Extractor:
         end = len(next(os.walk(self.datadir))[2])
         #error = 0
         #tmp=[]
-        pefiles=[]
-        nonpefiles=[]
-        for path, dir_, files in os.walk(self.datadir):
-            for file in files:
-                try:
-                    lief.PE.parse(path+'/'+file)
-                    pefile.PE(path+'/'+file)
-                    #lief.PE.parse(file)
-                    pefiles.append(file)
-                except ( lief.bad_format,lief.bad_file, lief.pe_error, lief.parser_error, RuntimeError) as e:
-                    nonpefiles.append(file)
-                    #raise e
-
-        with jsonlines.open('./nonPefiles.json', 'w') as f:
-            f.write(nonpefiles)
-        print('non-pe file : {}, pe file : {}, total :{}'.format(len(nonpefiles),len(pefiles),end))
-        extractor_iterator = ((sample) for idx, sample in enumerate(pefiles))
-        #extractor_iterator = ((sample) for idx, sample in enumerate(utility.directory_generator(self.datadir)))
+        #pefiles=[]
+        #nonpefiles=[]
+        #for path, dir_, files in os.walk(self.datadir):
+        #    for file in files:
+        #        try:
+        #            lief.PE.parse(path+'/'+file)
+        #            pefile.PE(path+'/'+file)
+        #            #lief.PE.parse(file)
+        #            pefiles.append(file)
+        #        except ( lief.bad_format,lief.bad_file, lief.pe_error, lief.parser_error, RuntimeError) as e:
+        #            nonpefiles.append(file)
+        #            #raise e
+#
+        #with jsonlines.open('./nonPefiles.json', 'w') as f:
+        #    f.write(nonpefiles)
+        #print('non-pe file : {}, pe file : {}, total :{}'.format(len(nonpefiles),len(pefiles),end))
+        #extractor_iterator = ((sample) for idx, sample in enumerate(pefiles))
+        extractor_iterator = ((sample) for idx, sample in enumerate(utility.directory_generator(self.datadir)))
         
         with jsonlines.open(self.output, 'w') as f:
             pass
         with ProcessPoolExecutor(max_workers=4) as pool:
-            with tqdm.tqdm(total=len(pefiles),ascii=True) as progress:
+            with tqdm.tqdm(total=end,ascii=True) as progress:
                 futures = []
 
                 for file in extractor_iterator:

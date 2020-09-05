@@ -26,8 +26,8 @@ for file_,val in target_list:#경로 폴더 파일
         else:#아니면
           api_dict[idx][api_name] +=1 #1을 더한다
     #########DO SOMETHING###########
-  except:
-    print('*may be something wrong in ',path+'/'+filename,error_msgs[error_msg_idx],' plase check')
+  except Exception as e:
+    print('*may be something wrong in ',path+'/'+filename,e,' plase check')
     error_file_list.append((path+'/'+filename,error_msgs[error_msg_idx]))
   pbar.set_postfix_str('processed: %s' % (file_))
   pbar.update(1)

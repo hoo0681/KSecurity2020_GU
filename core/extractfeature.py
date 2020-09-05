@@ -10,6 +10,7 @@ import pandas as pd
 import multiprocessing
 from . import utility
 import logging
+import gc
 #import lief
 #import pefile
 from concurrent.futures import ProcessPoolExecutor
@@ -131,6 +132,19 @@ class Extractor:
         #    #for item in tmp:
         #    #    f.write(item)
         #pool.close()
+        gclist=gc.get_stats()
+        for i in gclist:
+            for key,val in i.items():
+                print(key,': ',val)
+            print("\n")
+        print('GC start')
+        gc.collect()
+        print('GC done')
+        gclist=gc.get_stats()
+        for i in gclist:
+            for key,val in i.items():
+                print(key,': ',val)
+            print("\n")
     def run(self):
         self.extractor_multiprocess()
         

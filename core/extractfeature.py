@@ -114,10 +114,13 @@ class Extractor:
                     future.add_done_callback(lambda p: progress.update())
                     futures.append(future)
 #               results = []
+                print('done')
                 for future_ in futures:
                     result = future_.result()
                     with jsonlines.open(self.output, 'a') as f:
                         f.write(result)
+                    del result
+                    gc.collect(1)
 #                        results.append(result)
         #    for x in tqdm.tqdm(pool.imap_unordered(self.extract_unpack, extractor_iterator),ascii=True, total=end):
         #        if not x:

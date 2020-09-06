@@ -120,7 +120,10 @@ class Extractor:
                     with jsonlines.open(self.output, 'a') as f:
                         f.write(result)
                     del result
-                    gc.collect(1)
+                
+
+                
+                    #gc.collect(1)
 #                        results.append(result)
         #    for x in tqdm.tqdm(pool.imap_unordered(self.extract_unpack, extractor_iterator),ascii=True, total=end):
         #        if not x:

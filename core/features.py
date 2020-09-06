@@ -47,6 +47,7 @@ FEATURE_TPYE_LIST=[
               'StringExtractor',
               "ParsingWarning",
               "IsPacked",
+              'RichHeader',
               "IMG_IC_origin",
               "IMG_IC_log",
               "IMG_IC_standard_scaling",
@@ -537,7 +538,34 @@ class IsPacked(FeatureType):
         #raw_obj =>raw_features에서 반환하는 값
         #가공과정
         return raw_obj
+class RichHeader(FeatureType):
+    """RichHeader정보 어떻게 벡터화 할지 정해지지 않음"""
+    name = 'RichHeader'
+    dim = 10
+    def __init__(self): #생성자
+        super(FeatureType, self).__init__()#상속받기
+    def raw_features(self, bytez, lief_and_pefile):
+        lief_binary,pe=lief_and_pefile
+        if (pe is None) or (lief_binary is None):
+            return 0
+        info={}
+        info['id']=[i.id for i in lief_binary.rich_header.entries]
+        info['build_id']=[i.build_id for i in lief_binary.rich_header.entries]
+        info['count']=[i.count for i in lief_binary.rich_header.entries]
         
+        return info
+    def process_raw_features(self, raw_obj):#추출한 값 가공
+        #raw_obj =>raw_features에서 반환하는 값
+        #가공과정
+        for key in raw_obj.keys():
+            if len(raw_obj[key])>10:
+                raw_obj[key]=raw_obj[key][:10]
+        result = np.zeros((10,3))
+        result[:len(raw_obj['id']),0] = raw_obj['id']
+        result[:len(raw_obj['build_id']),1] = raw_obj['build_id']
+        result[:len(raw_obj['count']),2] = raw_obj['count']
+        return result
+
 def GenerateTime(lief_binary):
     if lief_binary is None:
         return time.strftime('%Y-%m', time.gmtime(0))

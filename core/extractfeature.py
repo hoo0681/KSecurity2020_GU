@@ -13,7 +13,9 @@ import logging
 import gc
 import lief
 import pefile
-from concurrent.futures import ProcessPoolExecutor
+import h5py
+import numpy as np
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 logger = logging.getLogger(__name__)
 
@@ -50,9 +52,9 @@ class Extractor:
         try:
             binary = open(fullpath, 'rb').read()
             #feature = extractor.raw_features(binary)
-            feature = extractor.raw_features(binary)
+            feature = extractor.dict2npdict(binary)
             feature.update({"sha256": sample}) # sample name(hash)
-            feature.update({"label" : self.data[self.data.hash==sample].values[0][1]}) #label
+            feature.update({"label" :self.data[self.data.hash==sample].values[0][1]}) #label
 
         except KeyboardInterrupt:
             sys.exit()
@@ -67,7 +69,8 @@ class Extractor:
         """
         Pass thorugh function unpacking arguments
         """
-        return self.extract_features(args)
+        idx,path=args
+        return (idx,self.extract_features(path))
 
     def extractor_multiprocess(self):
         """
@@ -75,85 +78,61 @@ class Extractor:
         Note that total variable in tqdm.tqdm should be revised
         Currently, I think that It is not safely. Because, multiprocess pool try to do FILE I/O.
         """
-        #pool = multiprocessing.Pool(4)
-        #queue = multiprocessing.Queue()
-        #queue.put('safe')
         end = len(next(os.walk(self.datadir))[2])
-        #error = 0
-        #tmp=[]
-        #pefiles=[]
-        #nonpefiles=[]
-        #for path, dir_, files in os.walk(self.datadir):
-        #    for file in files:
-        #        try:
-        #            lief.PE.parse(path+file)
-        #            pefile.PE(path+file)
-        #            #lief.PE.parse(file)
-        #            pefiles.append(file)
-        #        except ( lief.bad_format,lief.bad_file, lief.pe_error, lief.parser_error, RuntimeError) as e:
-        #            nonpefiles.append(file)
-        #            #raise e
-##
-        ##with jsonlines.open('./nonPefiles.json', 'w') as f:
-        ##    f.write(nonpefiles)
-        #print('non-pe file : {}, pe file : {}, total :{}'.format(len(nonpefiles),len(pefiles),end))
-        #extractor_iterator = ((sample) for idx, sample in enumerate(pefiles))
-        extractor_iterator = ((sample) for idx, sample in enumerate(utility.directory_generator(self.datadir)))
-        
-        with jsonlines.open(self.output, 'w') as f:
-            pass
-        with ProcessPoolExecutor(max_workers=4) as pool:
-            with tqdm.tqdm(total=end,ascii=True) as progress:
-                #for x in pool.map(self.extract_unpack,extractor_iterator,chunksize=10):
-                #    f.write(x)
-                #    progress.update()
-                futures = []
-                #pool.map(self.extract_unpack,extractor_iterator,chunksize=1000)
-                for file in extractor_iterator:
-                    future = pool.submit(self.extract_unpack, file)
-                    future.add_done_callback(lambda p: progress.update())
-                    futures.append(future)
-#               results = []
-                print('done')
-                for future_ in futures:
-                    result = future_.result()
-                    with jsonlines.open(self.output, 'a') as f:
-                        f.write(result)
-                    del result
-                
+        extractor_iterator = ((idx,sample) for idx, sample in enumerate(utility.directory_generator(self.datadir)))
+        try:
+            datasetF=h5py.File(self.output, 'r+')
+            filename_set=datasetF['sha256']
+            label_set=datasetF['label']
+            feature_set_dict={fe.name:datasetF[fe.name] for fe in self.features}
+            #dt=h5py.string_dtype()
+            #filename_set=datasetF.require_dataset('sha256',(0,),dtype=dt,maxshape=(None,),chunks=False,exact=True)
+            #label_set=datasetF.require_dataset('label',(0,),dtype=np.uint8,maxshape=(None,),chunks=False,exact=True)
+            #feature_set_dict={fe.name:datasetF.require_dataset(fe.name,(0,*fe.dim),exact=True,dtype=fe.types,maxshape=(None,*fe.dim),chunks=True) for fe in self.features}
+        except (Exception , OSError) as e:
+            print('new file',self.output)
+            #if (('No such file or directory')in str(e)) or (('Unable to open object') in str(e)):
+            datasetF= h5py.File(self.output, 'w')
+            dt=h5py.string_dtype()
+            filename_set=datasetF.create_dataset('sha256',(0,),dtype=dt,maxshape=(None,),chunks=True)
+            label_set=datasetF.create_dataset('label',(0,),dtype=np.uint8,maxshape=(None,),chunks=True)
+            feature_set_dict={fe.name:datasetF.create_dataset(fe.name,(0,*fe.dim),dtype=fe.types,maxshape=(None,*fe.dim),chunks=True) for fe in self.features}
+            #else:
+            #    raise e
+        firstidx=filename_set.shape[0]
 
-                
-                    #gc.collect(1)
-#                        results.append(result)
-        #    for x in tqdm.tqdm(pool.imap_unordered(self.extract_unpack, extractor_iterator),ascii=True, total=end):
-        #        if not x:
-        #            """
-        #            To input error class or function
-        #            """
-        #            #raise
-        #            error += 1
-        #            continue
-        #        #tmp.append(x)
-        #        msg = queue.get()
-        #        if msg == 'safe': 
-        #            f.write(x)                
-        #            queue.put('safe')
-        #    #for item in tmp:
-        #    #    f.write(item)
-        #pool.close()
-        #gclist=gc.get_stats()
-        #for i in gclist:
-        #    for key,val in i.items():
-        #        print(key,': ',val)
-        #    print("\n")
+        filename_set.resize((filename_set.shape[0]+end,))
+        label_set.resize((label_set.shape[0]+end,))
+        for i in feature_set_dict.values():
+            i.resize((i.shape[0]+end,*i.shape[1:]))
+        try:
+            with ProcessPoolExecutor(max_workers=4) as pool:
+                with tqdm.tqdm(total=end,ascii=True) as progress:
+                    futures = []
+                    for file in extractor_iterator:
+                        future = pool.submit(self.extract_unpack, file)
+                        future.add_done_callback(lambda p: progress.update())
+                        futures.append(future)
+                    print('done')
+                    for future_ in as_completed(futures):
+                        idx,result = future_.result()
+                        for k,i in result.items():
+                            if k =='sha256':
+                                filename_set[firstidx+idx,...]=i
+                            elif k =='label':
+                                label_set[firstidx+idx,...]=i
+                            else:
+                                feature_set_dict[k][firstidx+idx,...]=i
+                        #del result
+        except Exception as e:
+            filename_set.resize((firstidx,))
+            label_set.resize((firstidx,))
+            for i in feature_set_dict.values():
+                i.resize((firstidx,*i.shape[1:]))
+        datasetF.close()
         print('GC start')
         gc.collect()
         print('GC done')
-        #gclist=gc.get_stats()
-        #for i in gclist:
-        #    for key,val in i.items():
-        #        print(key,': ',val)
-        #    print("\n")
     def run(self):
         self.extractor_multiprocess()
         

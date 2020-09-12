@@ -50,21 +50,21 @@ FEATURE_TPYE_LIST=[
               'RichHeader',
               "IMG_IC_origin",
               "IMG_IC_log",
-              "IMG_IC_standard_scaling",
-              "IMG_IC_MinMax_scaling",
-              "IMG_IC_MaxAbs_scaling",
-              "IMG_IC_Robust_scaling",
-              "IMG_IC_normal_QuantileTransformer",
-              "IMG_IC_uniform_QuantileTransformer"
-
-
+              "SO_img",
+              #"IMG_IC_standard_scaling",
+              #"IMG_IC_MinMax_scaling",
+              #"IMG_IC_MaxAbs_scaling",
+              #"IMG_IC_Robust_scaling",
+              #"IMG_IC_normal_QuantileTransformer",
+              #"IMG_IC_uniform_QuantileTransformer",
 ]
 
 class FeatureType(object):
     ''' Base class from which each feature type may inherit '''
 
     name = ''
-    dim = 0
+    dim = (0,)
+    types=np.dtype
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         cls.name = cls.__name__
@@ -88,8 +88,8 @@ class ByteHistogram(FeatureType):
     ''' Byte histogram (count + non-normalized) over the entire binary file '''
 
     name = 'ByteHistogram'
-    dim = 256
-
+    dim = (256,)
+    types=np.float32
     def __init__(self):
         super(FeatureType, self).__init__()
 
@@ -110,8 +110,8 @@ class ByteEntropyHistogram(FeatureType):
     '''
 
     name = 'ByteEntropyHistogram'
-    dim = 256
-
+    dim = (256,)
+    types=np.float32
     def __init__(self, step=1024, window=2048):
         super(FeatureType, self).__init__()
         self.window = window
@@ -162,7 +162,8 @@ class SectionInfo(FeatureType):
     '''
 
     name = 'SectionInfo'
-    dim = 5 + 50 + 50 + 50 + 50 + 50
+    dim =( 5 + 50 + 50 + 50 + 50 + 50,)
+    types=np.float32
 
     def __init__(self):
         super(FeatureType, self).__init__()
@@ -233,8 +234,8 @@ class ImportsInfo(FeatureType):
     '''
 
     name = 'ImportsInfo'
-    dim = 1280
-
+    dim = (1280,)
+    types=np.float32
     def __init__(self):
         super(FeatureType, self).__init__()
 
@@ -273,8 +274,8 @@ class ExportsInfo(FeatureType):
     '''
 
     name = 'ExportsInfo'
-    dim = 128
-
+    dim = (128,)
+    types=np.float32
     def __init__(self):
         super(FeatureType, self).__init__()
 
@@ -298,8 +299,8 @@ class GeneralFileInfo(FeatureType):
     ''' General information about the file '''
 
     name = 'GeneralFileInfo'
-    dim = 10
-
+    dim = (10,)
+    types=np.float32
     def __init__(self):
         super(FeatureType, self).__init__()
 
@@ -345,8 +346,8 @@ class HeaderFileInfo(FeatureType):
     ''' Machine, architecure, OS, linker and other information extracted from header '''
 
     name = 'HeaderFileInfo'
-    dim = 62
-
+    dim = (62,)
+    types=np.float32
     def __init__(self):
         super(FeatureType, self).__init__()
 
@@ -421,8 +422,8 @@ class StringExtractor(FeatureType):
     ''' Extracts strings from raw byte stream '''
 
     name = 'StringExtractor'
-    dim = 1 + 1 + 1 + 96 + 1 + 1 + 1 + 1 + 1
-
+    dim =( 1 + 1 + 1 + 96 + 1 + 1 + 1 + 1 + 1,)
+    types=np.float32
     def __init__(self):
         super(FeatureType, self).__init__()
         # all consecutive runs of 0x20 - 0x7f that are 5+ characters
@@ -480,8 +481,8 @@ class ParsingWarning(FeatureType):
     ''' ParsingWarning over the entire binary file '''
 
     name = 'ParsingWarning'
-    dim = 2
-
+    dim = (2,)
+    types=np.uint
     def __init__(self):#FeatureType상속
         super(FeatureType, self).__init__()
 
@@ -506,14 +507,14 @@ class ParsingWarning(FeatureType):
         
     def process_raw_features(self, raw_obj):
         return np.asarray([
-            raw_obj['has_warning'],raw_obj['warnings']],dtype=np.float32
+            raw_obj['has_warning'],raw_obj['warnings']],dtype=np.uint8
         )
 class IsPacked(FeatureType):
     """ packed 되었는지 추측 Packed_PE_File_Detection_for_Malware_Forensics 참고"""
 
     name = 'IsPacked'
-    dim = 1
-
+    dim = (1,)
+    types=np.uint8
     def __init__(self): #생성자
         super(FeatureType, self).__init__()#상속받기
 
@@ -521,27 +522,41 @@ class IsPacked(FeatureType):
         lief_binary,pe=lief_and_pefile
         if (pe is None) or (lief_binary is None):
             return 0
-        if pe.get_section_by_rva(pe.OPTIONAL_HEADER.AddressOfEntryPoint) != None:
-            enter_sect=pe.get_section_by_rva(pe.OPTIONAL_HEADER.AddressOfEntryPoint)
-            if  enter_sect.IMAGE_SCN_MEM_EXECUTE and enter_sect.IMAGE_SCN_MEM_WRITE and enter_sect.get_entropy() >=6.85:
+        #if pe.get_section_by_rva(pe.OPTIONAL_HEADER.AddressOfEntryPoint) != None:
+        #    enter_sect=pe.get_section_by_rva(pe.OPTIONAL_HEADER.AddressOfEntryPoint)
+        #    if  enter_sect.IMAGE_SCN_MEM_EXECUTE and enter_sect.IMAGE_SCN_MEM_WRITE and enter_sect.get_entropy() >=6.85:
+        #        return 1
+        #elif pe.is_dll() :
+        #    for sect in pe.sections:
+        #        if sect.IMAGE_SCN_MEM_EXECUTE and sect.get_entropy()>=6.85:
+        #            return 1
+        #else:
+        #    for sect in pe.sections:
+        #        if hasattr(sect,'IMAGE_SCN_MEM_EXECUTE') and hasattr(sect,'IMAGE_SCN_MEM_WRITE') and sect.get_entropy()>=6.85:
+        #            return 1
+        #return 0
+        if lief_binary is None:
+            return 0
+        # properties of entry point, or if invalid, the first executable section
+        try:
+            entry_section = lief_binary.section_from_offset(lief_binary.entrypoint)
+            if (lief.PE.SECTION_CHARACTERISTICS.MEM_EXECUTE in entry_section.characteristics_lists) and (lief.PE.SECTION_CHARACTERISTICS.MEM_WRITE in entry_section.characteristics_lists) and (entry_section.entropy>=6.85):
                 return 1
-        elif pe.is_dll() :
-            for sect in pe.sections:
-                if sect.IMAGE_SCN_MEM_EXECUTE and sect.get_entropy()>=6.85:
-                    return 1
-        else:
-            for sect in pe.sections:
-                if hasattr(sect,'IMAGE_SCN_MEM_EXECUTE') and hasattr(sect,'IMAGE_SCN_MEM_WRITE') and sect.get_entropy()>=6.85:
+        except lief.not_found:
+            # bad entry point, let's find the first executable section
+            for s in lief_binary.sections:
+                if (lief.PE.SECTION_CHARACTERISTICS.MEM_EXECUTE in s.characteristics_lists) and (lief.PE.SECTION_CHARACTERISTICS.MEM_WRITE in s.characteristics_lists) and (s.entropy>=6.85):
                     return 1
         return 0
     def process_raw_features(self, raw_obj):#추출한 값 가공
         #raw_obj =>raw_features에서 반환하는 값
         #가공과정
-        return raw_obj
+        return np.array([raw_obj]).astype(np.uint8)
 class RichHeader(FeatureType):
     """RichHeader정보 어떻게 벡터화 할지 정해지지 않음"""
     name = 'RichHeader'
-    dim = 10
+    dim = (10,3)
+    types=np.uint8
     def __init__(self): #생성자
         super(FeatureType, self).__init__()#상속받기
     def raw_features(self, bytez, lief_and_pefile):
@@ -564,7 +579,42 @@ class RichHeader(FeatureType):
         result[:len(raw_obj['id']),0] = raw_obj['id']
         result[:len(raw_obj['build_id']),1] = raw_obj['build_id']
         result[:len(raw_obj['count']),2] = raw_obj['count']
-        return result
+        return result.astype(np.uint8)
+
+class SO_img(FeatureType):
+    """stream order 방식의 이미지 생성"""
+
+    name = 'SO_img'
+    dim = (256,256)
+    types=np.uint8
+    def __init__(self): #생성자
+        super(FeatureType, self).__init__()#상속받기
+
+    def raw_features(self, bytez, lief_and_pefile):
+        lief_binary,pe=lief_and_pefile
+        if (pe is None) or (lief_binary is None):
+            return 0
+        source2=bytearray(bytez)
+        h=w=np.floor(len(source2)**0.5)
+        h,w =int(h)+1,int(w)+1
+        SO=np.zeros((h,w))
+        h,w=int(h)-1,int(w)-1
+        i=0
+        for x in range(w):
+            for y in range(h):
+            #print(x,y)
+                if i<len(source2):
+                    SO[x,y]=source2[i]
+                else:
+                    SO[x,y]=0
+                i+=1
+        SO.resize((256,256))
+        return SO.astype(np.uint8)
+    def process_raw_features(self, raw_obj):#추출한 값 가공
+        #raw_obj =>raw_features에서 반환하는 값
+        #가공과정
+        return raw_obj
+        
 
 def GenerateTime(lief_binary):
     if lief_binary is None:
@@ -576,8 +626,8 @@ class IMG_IC_origin(FeatureType):
     """ 설명"""
 
     name = 'IMG_IC_origin'
-    dim = 256*256
-
+    dim = (256,256)
+    types=np.float32
     def __init__(self): #생성자
         super(FeatureType, self).__init__()#상속받기
 
@@ -585,20 +635,20 @@ class IMG_IC_origin(FeatureType):
         lief_binary,pe=lief_and_pefile
         source=bytearray(bytez)
         image=np.zeros((256,256))
-        for x,y in zip(source[::1],source[1::1]):
+        for x,y in zip(source[:-1:1],source[1::1]):
             image[x,y]+=1
         X=image#.astype(np.uint8)
-        return {'malimg':X.astype(np.uint8).tolist()}
-
+        #return {'malimg':X.astype(np.float32).tolist()}
+        return X.astype(np.float32)
     def process_raw_features(self, raw_obj):#추출한 값 가공
-        return np.array(raw_obj['malimg']).flatten()
+        return raw_obj
         #return 모델에_넘겨줄_최종_데이터
 class IMG_IC_log(FeatureType):
     """ 설명"""
 
     name = 'IMG_IC_log'
-    dim = 256*256
-
+    dim = (256,256)
+    types=np.float32
     def __init__(self): #생성자
         super(FeatureType, self).__init__()#상속받기
 
@@ -606,26 +656,25 @@ class IMG_IC_log(FeatureType):
         lief_binary,pe=lief_and_pefile
         source=bytearray(bytez)
         image=np.zeros((256,256))
-        for x,y in zip(source[::1],source[1::1]):
+        for x,y in zip(source[:-1:1],source[1::1]):
             image[x,y]+=1
-        X=image#.astype(np.uint8)
-        output=np.log(X+1)
+        output=np.log(image+1)
         
         #bytez => 파일내용 타입: byte 길이 : 가변적
         #lief_and_pefile => life와 pefile로 parse된 결과물, 타입: 튜플, 내용 : (life_binary,pe)
-        return {'malimg':output.astype(np.float32).tolist()}#이 내용이 기록됨
-
+        #return {'malimg':output.astype(np.float32).tolist()}#이 내용이 기록됨
+        return output.astype(np.float32)
     def process_raw_features(self, raw_obj):#추출한 값 가공  train,pridict전에 해당 과정을 거치고 들어감
         #raw_obj =>raw_features에서 반환하는 값
         #가공과정
-        return np.array(raw_obj['malimg']).flatten()
+        return raw_obj
         #return 모델에_넘겨줄_최종_데이터
 class IMG_IC_standard_scaling(FeatureType):
     """ 설명"""
 
     name = 'IMG_IC_standard_scaling'
-    dim = 256*256
-
+    dim = (256,256)
+    types=np.float32
     def __init__(self): #생성자
         super(FeatureType, self).__init__()#상속받기
 
@@ -639,19 +688,19 @@ class IMG_IC_standard_scaling(FeatureType):
         output=StandardScaler().fit_transform(X)        
         #bytez => 파일내용 타입: byte 길이 : 가변적
         #lief_and_pefile => life와 pefile로 parse된 결과물, 타입: 튜플, 내용 : (life_binary,pe)
-        return {'malimg':output.astype(np.float32).tolist()}
+        return output.astype(np.float32)
 
     def process_raw_features(self, raw_obj):#추출한 값 가공
         #raw_obj =>raw_features에서 반환하는 값
         #가공과정
-        return np.array(raw_obj['malimg']).flatten()
+        return raw_obj
         #return 모델에_넘겨줄_최종_데이터
 class IMG_IC_MinMax_scaling(FeatureType):
     """ 설명"""
 
     name = 'IMG_IC_MinMax_scaling'
-    dim = 256*256
-
+    dim = (256,256)
+    types=np.float32
     def __init__(self): #생성자
         super(FeatureType, self).__init__()#상속받기
 
@@ -665,19 +714,19 @@ class IMG_IC_MinMax_scaling(FeatureType):
         output=MinMaxScaler().fit_transform(X)      
         #bytez => 파일내용 타입: byte 길이 : 가변적
         #lief_and_pefile => life와 pefile로 parse된 결과물, 타입: 튜플, 내용 : (life_binary,pe)
-        return {'malimg':output.astype(np.float32).tolist()}
+        return output.astype(np.float32)
 
     def process_raw_features(self, raw_obj):#추출한 값 가공
         #raw_obj =>raw_features에서 반환하는 값
         #가공과정
-        return np.array(raw_obj['malimg']).flatten()
+        return raw_obj
         #return 모델에_넘겨줄_최종_데이터
 class IMG_IC_MaxAbs_scaling(FeatureType):
     """ 설명"""
 
     name = 'IMG_IC_MaxAbs_scaling'
-    dim = 256*256
-
+    dim = (256,256)
+    types=np.float32
     def __init__(self): #생성자
         super(FeatureType, self).__init__()#상속받기
 
@@ -691,19 +740,19 @@ class IMG_IC_MaxAbs_scaling(FeatureType):
         output=MaxAbsScaler().fit_transform(X)        
         #bytez => 파일내용 타입: byte 길이 : 가변적
         #lief_and_pefile => life와 pefile로 parse된 결과물, 타입: 튜플, 내용 : (life_binary,pe)
-        return {'malimg':output.astype(np.float32).tolist()}
+        return output.astype(np.float32)
 
     def process_raw_features(self, raw_obj):#추출한 값 가공
         #raw_obj =>raw_features에서 반환하는 값
         #가공과정
-        return np.array(raw_obj['malimg']).flatten()
+        return raw_obj
         #return 모델에_넘겨줄_최종_데이터
 class IMG_IC_Robust_scaling(FeatureType):
     """ 설명"""
 
     name = 'IMG_IC_Robust_scaling'
-    dim = 256*256
-
+    dim = (256,256)
+    types=np.float32
     def __init__(self): #생성자
         super(FeatureType, self).__init__()#상속받기
 
@@ -717,19 +766,19 @@ class IMG_IC_Robust_scaling(FeatureType):
         output=RobustScaler(quantile_range=(25, 75)).fit_transform(X)    
         #bytez => 파일내용 타입: byte 길이 : 가변적
         #lief_and_pefile => life와 pefile로 parse된 결과물, 타입: 튜플, 내용 : (life_binary,pe)
-        return {'malimg':output.astype(np.float32).tolist()}
+        return output.astype(np.float32)
 
     def process_raw_features(self, raw_obj):#추출한 값 가공
         #raw_obj =>raw_features에서 반환하는 값
         #가공과정
-        return np.array(raw_obj['malimg']).flatten()
+        return raw_obj
         #return 모델에_넘겨줄_최종_데이터
 class IMG_IC_normal_QuantileTransformer(FeatureType):
     """ 설명"""
 
     name = 'IMG_IC_normal_QuantileTransformer'
-    dim = 256*256
-
+    dim = (256,256)
+    types=np.float32
     def __init__(self): #생성자
         super(FeatureType, self).__init__()#상속받기
 
@@ -743,19 +792,19 @@ class IMG_IC_normal_QuantileTransformer(FeatureType):
         output=QuantileTransformer(output_distribution='normal',n_quantiles=256).fit_transform(X)      
         #bytez => 파일내용 타입: byte 길이 : 가변적
         #lief_and_pefile => life와 pefile로 parse된 결과물, 타입: 튜플, 내용 : (life_binary,pe)
-        return {'malimg':output.astype(np.float32).tolist()}
+        return output.astype(np.float32)
 
     def process_raw_features(self, raw_obj):#추출한 값 가공
         #raw_obj =>raw_features에서 반환하는 값
         #가공과정
-        raise
+        return raw_obj
         #return 모델에_넘겨줄_최종_데이터
 class IMG_IC_uniform_QuantileTransformer(FeatureType):
     """ 설명"""
 
     name = 'IMG_IC_uniform_QuantileTransformer'
-    dim = 256*256
-
+    dim = (256,256)
+    types=np.float32
     def __init__(self): #생성자
         super(FeatureType, self).__init__()#상속받기
 
@@ -769,18 +818,18 @@ class IMG_IC_uniform_QuantileTransformer(FeatureType):
         output=QuantileTransformer(output_distribution='uniform',n_quantiles=256).fit_transform(X)      
         #bytez => 파일내용 타입: byte 길이 : 가변적
         #lief_and_pefile => life와 pefile로 parse된 결과물, 타입: 튜플, 내용 : (life_binary,pe)
-        return {'malimg':output.astype(np.float32).tolist()}
+        return output.astype(np.float32)
     def process_raw_features(self, raw_obj):#추출한 값 가공
         #raw_obj =>raw_features에서 반환하는 값
         #가공과정
-        raise
+        return raw_obj
         #return 모델에_넘겨줄_최종_데이터
 class PEFeatureExtractor(object):
     ''' Extract useful features from a PE file, and return as a vector of fixed size. '''
     def __init__(self, featurelist, dim=0):
         self.features = featurelist
-        if dim == 0:
-            self.dim = sum([fe.dim for fe in self.features])
+        #if dim == 0:
+        #    self.dim = sum([fe.dim for fe in self.features])
     def unpack(self,arg):
         (func,bytez,pe_info)=arg
         return func(bytez,pe_info)
@@ -794,26 +843,28 @@ class PEFeatureExtractor(object):
             lief_binary=None
             pe=None
             #features = {"appeared" :None}
-#            raise 
         except Exception as e:  # everything else (KeyboardInterrupt, SystemExit, ValueError):
             raise
         lief_and_pefile=(lief_binary,pe)
         features = {"appeared" : GenerateTime(lief_binary)}
-        #appeared
-        #thread_list = []
-        #with ThreadPoolExecutor(max_workers=8) as executor:
-        #    for fe in self.features:
-        #        packed_arg=(fe.raw_features,bytez, lief_and_pefile)
-        #        callables=executor.submit(self.unpack, packed_arg)
-        #        thread_list.append(callables)
-        #        features.update({fe.name:callables})
-        #    #print()
-        #    concurrent.futures.wait(thread_list)
-        #    for fe in self.features:
-        #        features[fe.name]=features[fe.name].result()
         features.update({fe.name: fe.raw_features(bytez, lief_and_pefile) for fe in self.features})
         return features
-    
+    def dict2npdict(self, bytez):
+        try:
+            lief_binary = lief.PE.parse(list(bytez))
+            pe=pefile.PE(data=bytez)
+            
+        except ( lief.bad_format,lief.bad_file, lief.pe_error, lief.parser_error, RuntimeError) as e:
+            lief_binary=None
+            pe=None
+            #features = {"appeared" :None}
+        except Exception as e:  # everything else (KeyboardInterrupt, SystemExit, ValueError):
+            raise
+        lief_and_pefile=(lief_binary,pe)
+        #features = {"appeared" : GenerateTime(lief_binary)}
+        features={}
+        features.update({fe.name: fe.feature_vector(bytez, lief_and_pefile) for fe in self.features})
+        return features
     def process_raw_features(self, raw_obj):
         feature_vectors = [fe.process_raw_features(raw_obj[fe.name]) for fe in self.features]
         return np.hstack(feature_vectors).astype(np.float32)

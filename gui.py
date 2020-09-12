@@ -26,9 +26,11 @@ features.py >>
 사용 가능한 모델 종류가 ui에 자동 반영되도록
 모델 평가자료 비교기능
 
-
 2020-08-27 업데이트 pyqt를 사용했더니 심각한 오류가 발생해서 되돌림
 멀티프로세스, 멀티스레드 적용함 에러는 raise되도록 함
+
+2020-09-12 업데이트 저장파일의 형식을 hdf5로 전면 수정 메모리 부족현상 완화유도
+단, 기존의 기능과 호환여부확인 안함 절대 주의!!
 """
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QLineEdit, QFileDialog, QLabel, QPushButton, QCheckBox
@@ -435,7 +437,7 @@ class Ui_MainWindow(QWidget):
         """
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        fileName, _ = QFileDialog.getSaveFileName(self,"QFileDialog.getOpenFileName()", "","jsonl Files (*.jsonl)", options=options)
+        fileName, _ = QFileDialog.getSaveFileName(self,"QFileDialog.getOpenFileName()", "","h5 Files (*.h5)", options=options)
         if fileName:
             self.ExtractOutputPath.setText(fileName)
     
@@ -605,7 +607,7 @@ class Ui_MainWindow(QWidget):
         evaluate.run()
 
 if __name__ == "__main__":
-    print("hoo's: revision NUMBER:2020.09.07 24:14")
+    print("hoo's: revision NUMBER:2020.09.12 20:42")
     app = QtWidgets.QApplication(sys.argv)
     MainWindow = QtWidgets.QMainWindow()
     ui = Ui_MainWindow()

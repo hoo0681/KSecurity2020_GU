@@ -44,14 +44,11 @@ class Predictor:
         name = []
         err = 0
         end = len(next(os.walk(self.testdir))[2])
-
         for sample in tqdm.tqdm(utility.directory_generator(self.testdir),ascii=True, total=end):
             fullpath = os.path.join(self.testdir, sample)
-
             if os.path.isfile(fullpath):
                 binary = open(fullpath, "rb").read()
                 name.append(sample)
-
                 try:
                     y_pred.append(core.predict_sample(self.model, binary, self.features))           
                 except KeyboardInterrupt:
@@ -61,10 +58,8 @@ class Predictor:
                     y_pred.append(0)
                     err += 1
                     raise
-
         y_pred = np.where(np.array(y_pred) > 0.5, 1, 0)
         series = OrderedDict([('hash', name),('y_pred', y_pred)])
         r = pd.DataFrame.from_dict(series)
         r.to_csv(self.output, index=False, header=None)
-
         logger.info('{} error is occured'.format(err))

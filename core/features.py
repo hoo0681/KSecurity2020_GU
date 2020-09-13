@@ -572,14 +572,17 @@ class RichHeader(FeatureType):
     def process_raw_features(self, raw_obj):#추출한 값 가공
         #raw_obj =>raw_features에서 반환하는 값
         #가공과정
-        for key in raw_obj.keys():
-            if len(raw_obj[key])>10:
-                raw_obj[key]=raw_obj[key][:10]
         result = np.zeros((10,3))
-        result[:len(raw_obj['id']),0] = raw_obj['id']
-        result[:len(raw_obj['build_id']),1] = raw_obj['build_id']
-        result[:len(raw_obj['count']),2] = raw_obj['count']
-        return result.astype(np.uint8)
+        if raw_obj==0:
+            return result
+        else:
+            for key in raw_obj.keys():
+                if len(raw_obj[key])>10:
+                    raw_obj[key]=raw_obj[key][:10]
+            result[:len(raw_obj['id']),0] = raw_obj['id']
+            result[:len(raw_obj['build_id']),1] = raw_obj['build_id']
+            result[:len(raw_obj['count']),2] = raw_obj['count']
+            return result.astype(np.uint8)
 
 class SO_img(FeatureType):
     """stream order 방식의 이미지 생성"""

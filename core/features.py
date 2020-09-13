@@ -611,7 +611,7 @@ class SO_img(FeatureType):
                 else:
                     SO[x,y]=0
                 i+=1
-        SO.resize((256,256))
+        SO=np.resize(SO,(256,256))
         return SO.astype(np.uint8)
     def process_raw_features(self, raw_obj):#추출한 값 가공
         #raw_obj =>raw_features에서 반환하는 값

@@ -94,9 +94,9 @@ class Extractor:
             #if (('No such file or directory')in str(e)) or (('Unable to open object') in str(e)):
             datasetF= h5py.File(self.output, 'w')
             dt=h5py.string_dtype()
-            filename_set=datasetF.create_dataset('sha256',(0,),dtype=dt,maxshape=(None,),chunks=True)
-            label_set=datasetF.create_dataset('label',(0,),dtype=np.uint8,maxshape=(None,),chunks=True)
-            feature_set_dict={fe.name:datasetF.create_dataset(fe.name,(0,*fe.dim),dtype=fe.types,maxshape=(None,*fe.dim),chunks=True) for fe in self.features}
+            filename_set=datasetF.create_dataset('sha256',(0,),dtype=dt,maxshape=(None,),chunks=True, compression="lzf")
+            label_set=datasetF.create_dataset('label',(0,),dtype=np.uint8,maxshape=(None,),chunks=True, compression="lzf")
+            feature_set_dict={fe.name:datasetF.create_dataset(fe.name,(0,*fe.dim),dtype=fe.types,maxshape=(None,*fe.dim),chunks=True, compression="lzf") for fe in self.features}
             #else:
             #    raise e
         firstidx=filename_set.shape[0]
@@ -107,23 +107,46 @@ class Extractor:
             i.resize((i.shape[0]+end,*i.shape[1:]))
         try:
             with ProcessPoolExecutor(max_workers=4) as pool:
-                with tqdm.tqdm(total=end,ascii=True) as progress:
-                    futures = []
-                    for file in extractor_iterator:
-                        future = pool.submit(self.extract_unpack, file)
-                        future.add_done_callback(lambda p: progress.update())
-                        futures.append(future)
-                    print('done')
-                    for future_ in as_completed(futures):
-                        idx,result = future_.result()
-                        for k,i in result.items():
-                            if k =='sha256':
-                                filename_set[firstidx+idx,...]=i
-                            elif k =='label':
-                                label_set[firstidx+idx,...]=i
-                            else:
-                                feature_set_dict[k][firstidx+idx,...]=i
-                        #del result
+                with tqdm.tqdm(total=end,ascii=True,position=0, leave=True,desc='feature progress') as progress:
+                    with tqdm.tqdm(total=end,ascii=True,position=1, leave=True,desc='save progress') as save_progress:
+                        futures = []
+                        for file in extractor_iterator:
+                            future = pool.submit(self.extract_unpack, file)
+                            future.add_done_callback(lambda p: self.progress_print(progress,p))
+                            futures.append(future)
+                        #print('done')
+                        for f in as_completed(futures):
+                            idx,result = f.result()
+                            for k,i in result.items():
+                                if k =='sha256':
+                                    filename_set[firstidx+idx,...]=i
+                                    save_progress.set_postfix_str("{}".format(i))
+                                elif k =='label':
+                                    label_set[firstidx+idx,...]=i
+                                else:
+                                    feature_set_dict[k][firstidx+idx,...]=i
+                            if f.done():
+                                futures.remove(f)
+                                save_progress.update(1)
+                                
+                            #print(len(futures))
+                    #while len(futures)!=0:
+                    #    tmp=futures.pop()
+                    #    if tmp.running():
+                    #        futures.append(tmp)
+                    #    elif tmp.done():
+                    #        idx,result = tmp.result()
+                    #        print(len(futures))
+                    #        for k,i in result.items():
+                    #            if k =='sha256':
+                    #                filename_set[firstidx+idx,...]=i
+                    #            elif k =='label':
+                    #                label_set[firstidx+idx,...]=i
+                    #            else:
+                    #                feature_set_dict[k][firstidx+idx,...]=i
+                    #    else:
+                    #        futures.append(tmp)
+                    #    #del result
         except Exception as e:
             print('error: ',e)
             filename_set.resize((firstidx,))
@@ -139,6 +162,10 @@ class Extractor:
         print('GC start')
         gc.collect()
         print('GC done')
+    def progress_print(self, progress,future):
+        _,i=future.result()
+        progress.set_postfix_str("{}".format(i['sha256']))
+        progress.update(1)
     def run(self):
         self.extractor_multiprocess()
         

@@ -125,10 +125,16 @@ class Extractor:
                                 feature_set_dict[k][firstidx+idx,...]=i
                         #del result
         except Exception as e:
+            print('error: ',e)
             filename_set.resize((firstidx,))
             label_set.resize((firstidx,))
             for i in feature_set_dict.values():
                 i.resize((firstidx,*i.shape[1:]))
+            datasetF.close()
+            pass
+        except:
+            datasetF.close()
+            raise
         datasetF.close()
         print('GC start')
         gc.collect()

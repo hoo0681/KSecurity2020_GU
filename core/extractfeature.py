@@ -168,4 +168,128 @@ class Extractor:
         progress.update(1)
     def run(self):
         self.extractor_multiprocess()
-        
+    
+
+class testExtractor:
+    def __init__(self, datadir, output, features):
+        self.datadir = datadir
+        self.output = output
+        self.features = features
+    def extract_features(self, sample):
+        """
+        Extract features.
+        If error is occured, return None Object
+        """
+        extractor = PEFeatureExtractor(self.features)
+        fullpath = os.path.join(os.path.join(self.datadir, sample))
+        try:
+            binary = open(fullpath, 'rb').read()
+            #feature = extractor.raw_features(binary)
+            feature = extractor.dict2npdict(binary)
+            feature.update({"sha256": sample}) # sample name(hash)
+        except KeyboardInterrupt:
+            sys.exit()
+        except Exception as e:  
+            logger.error('{}: {} error is occuered'.format(sample, e))
+            #raise
+            return None
+
+        return feature
+
+    def extract_unpack(self, args):
+        """
+        Pass thorugh function unpacking arguments
+        """
+        idx,path=args
+        return (idx,self.extract_features(path))
+
+    def extractor_multiprocess(self):
+        """
+        Ready to do multi Process
+        Note that total variable in tqdm.tqdm should be revised
+        Currently, I think that It is not safely. Because, multiprocess pool try to do FILE I/O.
+        """
+        end = len(next(os.walk(self.datadir))[2])
+        extractor_iterator = ((idx,sample) for idx, sample in enumerate(utility.directory_generator(self.datadir)))
+        try:
+            datasetF=h5py.File(self.output, 'r+')
+            filename_set=datasetF['sha256']
+            feature_set_dict={fe.name:datasetF[fe.name] for fe in self.features}
+            #dt=h5py.string_dtype()
+            #filename_set=datasetF.require_dataset('sha256',(0,),dtype=dt,maxshape=(None,),chunks=False,exact=True)
+            #label_set=datasetF.require_dataset('label',(0,),dtype=np.uint8,maxshape=(None,),chunks=False,exact=True)
+            #feature_set_dict={fe.name:datasetF.require_dataset(fe.name,(0,*fe.dim),exact=True,dtype=fe.types,maxshape=(None,*fe.dim),chunks=True) for fe in self.features}
+        except (Exception , OSError) as e:
+            print('new file',self.output)
+            #if (('No such file or directory')in str(e)) or (('Unable to open object') in str(e)):
+            datasetF= h5py.File(self.output, 'w')
+            dt=h5py.string_dtype()
+            filename_set=datasetF.create_dataset('sha256',(0,),dtype=dt,maxshape=(None,),chunks=True, compression="lzf")
+            feature_set_dict={fe.name:datasetF.create_dataset(fe.name,(0,*fe.dim),dtype=fe.types,maxshape=(None,*fe.dim),chunks=True, compression="lzf") for fe in self.features}
+            #else:
+            #    raise e
+        firstidx=filename_set.shape[0]
+
+        filename_set.resize((filename_set.shape[0]+end,))
+        for i in feature_set_dict.values():
+            i.resize((i.shape[0]+end,*i.shape[1:]))
+        try:
+            with ProcessPoolExecutor(max_workers=4) as pool:
+                with tqdm.tqdm(total=end,ascii=True,position=0, leave=True,desc='feature progress') as progress:
+                    with tqdm.tqdm(total=end,ascii=True,position=1, leave=True,desc='save progress') as save_progress:
+                        futures = []
+                        for file in extractor_iterator:
+                            future = pool.submit(self.extract_unpack, file)
+                            future.add_done_callback(lambda p: self.progress_print(progress,p))
+                            futures.append(future)
+                        #print('done')
+                        for f in as_completed(futures):
+                            idx,result = f.result()
+                            for k,i in result.items():
+                                if k =='sha256':
+                                    filename_set[firstidx+idx,...]=i
+                                    save_progress.set_postfix_str("{}".format(i))
+                                else:
+                                    feature_set_dict[k][firstidx+idx,...]=i
+                            if f.done():
+                                futures.remove(f)
+                                save_progress.update(1)
+                                
+                            #print(len(futures))
+                    #while len(futures)!=0:
+                    #    tmp=futures.pop()
+                    #    if tmp.running():
+                    #        futures.append(tmp)
+                    #    elif tmp.done():
+                    #        idx,result = tmp.result()
+                    #        print(len(futures))
+                    #        for k,i in result.items():
+                    #            if k =='sha256':
+                    #                filename_set[firstidx+idx,...]=i
+                    #            elif k =='label':
+                    #                label_set[firstidx+idx,...]=i
+                    #            else:
+                    #                feature_set_dict[k][firstidx+idx,...]=i
+                    #    else:
+                    #        futures.append(tmp)
+                    #    #del result
+        except Exception as e:
+            print('error: ',e)
+            filename_set.resize((firstidx,))
+            for i in feature_set_dict.values():
+                i.resize((firstidx,*i.shape[1:]))
+            datasetF.close()
+            pass
+        except:
+            datasetF.close()
+            raise
+        datasetF.close()
+        print('GC start')
+        gc.collect()
+        print('GC done')
+    def progress_print(self, progress,future):
+        _,i=future.result()
+        progress.set_postfix_str("{}".format(i['sha256']))
+        progress.update(1)
+    def run(self):
+        self.extractor_multiprocess()

@@ -267,6 +267,53 @@ class Ui_MainWindow(QWidget):
         self.EvaluationRunButton.setGeometry(QtCore.QRect(678, 346, 141, 41))
         self.EvaluationRunButton.setObjectName("EvaluationRunButton")
         self.tabWidget.addTab(self.tab_4, "")
+        
+        self.tab_5 = QtWidgets.QWidget()
+        self.tab_5.setObjectName("tab_5")
+        self.testsetlabel = QtWidgets.QLabel(self.tab_5)
+        self.testsetlabel.setGeometry(QtCore.QRect(10, 10, 67, 17))
+        self.testsetlabel.setObjectName("testsetlabel")
+        self.testsetPathLabel = QtWidgets.QLabel(self.tab_5)
+        self.testsetPathLabel.setGeometry(QtCore.QRect(80, 10, 491, 16))
+        self.testsetPathLabel.setObjectName("testsetPathLabel")
+        self.TestSetbutton = QtWidgets.QPushButton(self.tab_5)
+        self.TestSetbutton.setGeometry(QtCore.QRect(10, 30, 61, 27))
+        self.TestSetbutton.setObjectName("TestSetbutton")
+
+        #####################################################
+        for i,v in zip(range(len(features.FEATURE_TPYE_LIST)),features.FEATURE_TPYE_LIST):
+            new_attr_name='testFe'+v+'ChkBox'
+            self.__setattr__(new_attr_name,QtWidgets.QCheckBox(self.tab_5))
+            new_attr=self.__getattribute__(new_attr_name)
+            new_attr.setGeometry(QtCore.QRect(30+(170*((i)//7)), 130+(20*((i+7)%7)), 151, 22))
+            new_attr.setChecked(True)
+            new_attr.setObjectName(new_attr_name)
+
+        self.testExtractOutputbutton = QtWidgets.QPushButton(self.tab_5)
+        self.testExtractOutputbutton.setGeometry(QtCore.QRect(20, 320, 99, 27))
+        self.testExtractOutputbutton.setObjectName("testExtractOutputbutton")
+        self.testlabel_3 = QtWidgets.QLabel(self.tab_5)
+        self.testlabel_3.setGeometry(QtCore.QRect(20, 300, 67, 17))
+        self.testlabel_3.setObjectName("testlabel_3")
+        self.testExtractRunButton = QtWidgets.QPushButton(self.tab_5)
+        self.testExtractRunButton.setGeometry(QtCore.QRect(670, 330, 151, 41))
+        self.testExtractRunButton.setObjectName("testExtractRunButton")
+
+        self.testline_2 = QtWidgets.QFrame(self.tab_5)
+        self.testline_2.setGeometry(QtCore.QRect(0, 120, 851, 16))
+        self.testline_2.setFrameShape(QtWidgets.QFrame.HLine)
+        self.testline_2.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.testline_2.setObjectName("testline_2")
+        self.testline_3 = QtWidgets.QFrame(self.tab_5)
+        self.testline_3.setGeometry(QtCore.QRect(0, 270, 851, 16))
+        self.testline_3.setFrameShape(QtWidgets.QFrame.HLine)
+        self.testline_3.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.testline_3.setObjectName("testline_3")
+        self.testExtractOutputPath = QtWidgets.QLabel(self.tab_5)
+        self.testExtractOutputPath.setGeometry(QtCore.QRect(80, 300, 480, 17))
+        self.testExtractOutputPath.setObjectName("testExtractOutputPath")
+
+        self.tabWidget.addTab(self.tab_5, "")
         MainWindow.setCentralWidget(self.centralWidget)
         self.menuBar = QtWidgets.QMenuBar(MainWindow)
         self.menuBar.setGeometry(QtCore.QRect(0, 0, 880, 25))
@@ -347,7 +394,21 @@ class Ui_MainWindow(QWidget):
         self.LabelPathButton.setText(_translate("MainWindow", "Open"))
         self.EvaluationRunButton.setText(_translate("MainWindow", "Run"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_4), _translate("MainWindow", "Evaluation"))
+        
+        self.testsetlabel.setText(_translate("MainWindow", "TestSet:"))
+        self.testsetPathLabel.setText(_translate("MainWindow", "None"))
+        self.TestSetbutton.setText(_translate("MainWindow", "Open"))
 
+        for i,v in zip(range(len(features.FEATURE_TPYE_LIST)),features.FEATURE_TPYE_LIST):
+            new_attr_name='testFe'+v+'ChkBox'
+            new_attr=self.__getattribute__(new_attr_name)
+            new_attr.setText(_translate("MainWindow", v))
+        self.testExtractOutputbutton.setText(_translate("MainWindow", "Open"))
+        self.testlabel_3.setText(_translate("MainWindow", "output:"))
+        self.testExtractRunButton.setText(_translate("MainWindow", "Run"))
+
+        self.testExtractOutputPath.setText(_translate("MainWindow", "None"))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_5), _translate("MainWindow", "test Extract features"))
     def check_extractfeatures(self):
         """
         features.py의 메소드를 로드하고 자동으로 추가해주도록 변경하자
@@ -381,9 +442,25 @@ class Ui_MainWindow(QWidget):
         #    r.append(features.ExportsInfo())
 
         return r
+    def check_testextractfeatures(self):
+        """
+        features.py의 메소드를 로드하고 자동으로 추가해주도록 변경하자
+        Check Features list in extract panel.
+        this features used extracting
+        """
+        r = []
+        for i,v in zip(range(len(features.FEATURE_TPYE_LIST)),features.FEATURE_TPYE_LIST):
+            new_attr_name='testFe'+v+'ChkBox'
+            new_attr=self.__getattribute__(new_attr_name)
+            if new_attr.isChecked():
+                func=getattr(features,v)
+                r.append(func())
+        return r
 
     def clearvalue(self):
         self.trainsetPathLabel.setText("")
+    def testclearvalue(self):
+        self.testsetPathLabel.setText("")
 
     """
     widget events
@@ -414,7 +491,10 @@ class Ui_MainWindow(QWidget):
         self.TestcsvPathButton.clicked.connect(self.TestcsvPathButton_click)
         self.LabelPathButton.clicked.connect(self.LabelPathButton_click)
         self.EvaluationRunButton.clicked.connect(self.EvaluationRunButton_click)
-
+        #test feature
+        self.TestSetbutton.clicked.connect(self.TestSetbutton_click)
+        self.testExtractRunButton.clicked.connect(self.testextractBtn_click)
+        self.testExtractOutputbutton.clicked.connect(self.testExtractOutputbutton_click)
     def TrainSetbutton_click(self):
         """
         Choose TrainSetPath(directory)
@@ -423,6 +503,15 @@ class Ui_MainWindow(QWidget):
         # To do : add Exception
         if DirName:
             self.trainsetPathLabel.setText(DirName)
+        
+    def TestSetbutton_click(self):
+        """
+        Choose TestSetPath(directory)
+        """
+        DirName = QFileDialog.getExistingDirectory(self, "Select Folder")
+        # To do : add Exception
+        if DirName:
+            self.testsetPathLabel.setText(DirName)
         
     def TrainSetcsvbutton_click(self):
         options = QFileDialog.Options()
@@ -440,7 +529,15 @@ class Ui_MainWindow(QWidget):
         fileName, _ = QFileDialog.getSaveFileName(self,"QFileDialog.getOpenFileName()", "","h5 Files (*.h5)", options=options)
         if fileName:
             self.ExtractOutputPath.setText(fileName)
-    
+    def testExtractOutputbutton_click(self):
+        """
+        Set output label in a extract panel 
+        """
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        fileName, _ = QFileDialog.getSaveFileName(self,"QFileDialog.getOpenFileName()", "","h5 Files (*.h5)", options=options)
+        if fileName:
+            self.testExtractOutputPath.setText(fileName)
     def ModelPathButton_click(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
@@ -539,6 +636,25 @@ class Ui_MainWindow(QWidget):
             output = os.path.join(os.getcwd(), 'features.jsonl')           
 
         extractor = extractfeature.Extractor(trainsetpath, trainsetlabelpath, output, features)
+        extractor.run()
+
+        logger.info('******* Extracting Done ******* \n')
+    def testextractBtn_click(self):
+        """
+        Run Button in a 'Extract' panel.
+        """
+        # Extract features which user select       
+        features = self.check_extractfeatures()
+        testsetpath = self.testsetPathLabel.text()
+        output = self.testExtractOutputPath.text()
+
+        if not utility.checkNone(testsetpath):
+            logger.info('[Error] Please check the trainsetpath')
+            return
+        if not utility.checkNone(output):
+            output = os.path.join(os.getcwd(), 'features.h5')           
+
+        extractor = extractfeature.testExtractor(testsetpath, output, features)
         extractor.run()
 
         logger.info('******* Extracting Done ******* \n')

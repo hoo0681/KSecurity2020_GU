@@ -21,8 +21,7 @@ logger.setLevel(logging.INFO)
 if __name__ == '__main__':
     print("hoo's CLI : revision NUMBER:2020.09.19 18:52")
     parser = argparse.ArgumentParser()
-    help_ = "가천대학교 201935364 홍승후 k시큐리티 바이러스 라벨링 툴 v1.0 \n 중간에 응답이 없다면 ctrl + C를 누르세요 \n 현재상태에 대한 체크포인트가 생성됩니다\
-        체크포인트에서 부터 시작하거나 key에 대한 체크포인트파일이 있다면 실행시 -ckpKF '.\keyinfo.json'를 추가해주세요"
+    help_ = "가천대학교 201935364 홍승후 k시큐리티 특징추출기"
     parser.add_argument("-A","--action",choices=["TrainExtFeat","TestExtFeat"],required=True, help=help_)
     help_ = "[필수] 할 행동을 결정하세요 선택지:['TrainExtFeat','TestExtFeat'] "
     parser.add_argument("-OP","--outputPath",required=False, help=help_)

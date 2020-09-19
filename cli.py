@@ -33,7 +33,8 @@ if __name__ == '__main__':
     help_ = "[필수] TrainExtFeat를 선택한경우 필수적으로 필요합니다. 타입은 csv이여야 합니다. 예: ./label.csv"
     parser.add_argument("-selFeat", "--selectFeature",nargs='?',choices=[*features.FEATURE_TPYE_LIST,'all','None_img','only_img'],const='all',default='all',required=False, help=help_)
     help_ = "[옵션] 추출할 특징을 선택합니다. 기본값은 all, 미선언시 all입니다 "
-    args = parser.parse_args('-A TrainExtFeat -OP ../result/feature/0919_2.h5 -TD ../result/content/dataset -LaDir ../result/content/asdf.csv'.split())
+    #args = parser.parse_args('-A TrainExtFeat -OP ../result/feature/0919_2.h5 -TD ../result/content/dataset -LaDir ../result/content/asdf.csv'.split())
+    args=parser.parse_args()
     if args.action == "TrainExtFeat":
         if ((args.targetfolder is None) or (args.outputPath is None) or (args.labelfile is None)):
             parser.error("plase check argument: {}{}{}".format(args.targetfolder,args.outputPath,args.labelfile))

@@ -827,6 +827,41 @@ class IMG_IC_uniform_QuantileTransformer(FeatureType):
         #가공과정
         return raw_obj
         #return 모델에_넘겨줄_최종_데이터
+class DataDirectories(FeatureType):
+    ''' Extracts size and virtual address of the first 15 data directories '''
+
+    name = 'datadirectories'
+    dim = (15 * 2,)
+
+    def __init__(self):
+        super(FeatureType, self).__init__()
+        self._name_order = [
+            "EXPORT_TABLE", "IMPORT_TABLE", "RESOURCE_TABLE", "EXCEPTION_TABLE", "CERTIFICATE_TABLE",
+            "BASE_RELOCATION_TABLE", "DEBUG", "ARCHITECTURE", "GLOBAL_PTR", "TLS_TABLE", "LOAD_CONFIG_TABLE",
+            "BOUND_IMPORT", "IAT", "DELAY_IMPORT_DESCRIPTOR", "CLR_RUNTIME_HEADER"
+        ]
+
+    def raw_features(self, bytez, lief_and_pefile):
+        lief_binary,pe=lief_and_pefile
+        output = []
+        if lief_binary is None:
+            return output
+
+        for data_directory in lief_binary.data_directories:
+            output.append({
+                "name": str(data_directory.type).replace("DATA_DIRECTORY.", ""),
+                "size": data_directory.size,
+                "virtual_address": data_directory.rva
+            })
+        return output
+
+    def process_raw_features(self, raw_obj):
+        features = np.zeros((2 * len(self._name_order),), dtype=np.float32)
+        for i in range(len(self._name_order)):
+            if i < len(raw_obj):
+                features[2 * i] = raw_obj[i]["size"]
+                features[2 * i + 1] = raw_obj[i]["virtual_address"]
+        return features
 class PEFeatureExtractor(object):
     ''' Extract useful features from a PE file, and return as a vector of fixed size. '''
     def __init__(self, featurelist, dim=0):

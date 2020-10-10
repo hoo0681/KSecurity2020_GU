@@ -105,6 +105,7 @@ class Extractor:
         label_set.resize((label_set.shape[0]+end,))
         for i in feature_set_dict.values():
             i.resize((i.shape[0]+end,*i.shape[1:]))
+        print(end)
         try:
             with ProcessPoolExecutor(max_workers=4) as pool:
                 with tqdm.tqdm(total=end,ascii=True,position=0, leave=True,desc='feature progress') as progress:
@@ -126,7 +127,7 @@ class Extractor:
                                 else:
                                     feature_set_dict[k][firstidx+idx,...]=i
                             if f.done():
-                                futures.remove(f)
+                                #futures.remove(f)
                                 save_progress.update(1)
                                 
                             #print(len(futures))

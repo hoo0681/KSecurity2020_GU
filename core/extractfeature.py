@@ -95,7 +95,7 @@ class Extractor:
             datasetF= h5py.File(self.output, 'w')
             dt=h5py.string_dtype()
             filename_set=datasetF.create_dataset('sha256',(0,),dtype=dt,maxshape=(None,),chunks=True, compression="lzf")
-            label_set=datasetF.create_dataset('label',(0,),dtype=np.uint8,maxshape=(None,),chunks=True, compression="lzf")
+            label_set=datasetF.create_dataset('label',(0,),dtype=dt,maxshape=(None,),chunks=True, compression="lzf")
             feature_set_dict={fe.name:datasetF.create_dataset(fe.name,(0,*fe.dim),dtype=fe.types,maxshape=(None,*fe.dim),chunks=True, compression="lzf") for fe in self.features}
             #else:
             #    raise e
@@ -106,6 +106,8 @@ class Extractor:
         for i in feature_set_dict.values():
             i.resize((i.shape[0]+end,*i.shape[1:]))
         print(end)
+        print(filename_set.shape)
+        print(label_set.shape)
         try:
             with ProcessPoolExecutor(max_workers=4) as pool:
                 with tqdm.tqdm(total=end,ascii=True,position=0, leave=True,desc='feature progress') as progress:
@@ -127,7 +129,7 @@ class Extractor:
                                 else:
                                     feature_set_dict[k][firstidx+idx,...]=i
                             if f.done():
-                                #futures.remove(f)
+                                futures.remove(f)
                                 save_progress.update(1)
                                 
                             #print(len(futures))

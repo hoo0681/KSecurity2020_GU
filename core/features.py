@@ -895,7 +895,7 @@ class PEFeatureExtractor(object):
             
         except lief.read_out_of_bound:
             try:
-                lief_bin=lief.parse( bytez[:-len(pe.get_overlay())])
+                lief_binary=lief.parse( bytez[:-len(pe.get_overlay())])
             except Exception as e:
                 print('with OOB',e)
         except ( lief.bad_format,lief.bad_file, lief.pe_error, lief.parser_error, RuntimeError) as e:

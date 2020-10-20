@@ -95,7 +95,7 @@ class Extractor:
             datasetF= h5py.File(self.output, 'w')
             dt=h5py.string_dtype()
             filename_set=datasetF.create_dataset('sha256',(0,),dtype=dt,maxshape=(None,),chunks=True, compression="lzf")
-            label_set=datasetF.create_dataset('label',(0,),dtype=dt,maxshape=(None,),chunks=True, compression="lzf")
+            label_set=datasetF.create_dataset('label',(0,),dtype=np.uint8,maxshape=(None,),chunks=True, compression="lzf")
             feature_set_dict={fe.name:datasetF.create_dataset(fe.name,(0,*fe.dim),dtype=fe.types,maxshape=(None,*fe.dim),chunks=True, compression="lzf") for fe in self.features}
             #else:
             #    raise e
@@ -125,7 +125,7 @@ class Extractor:
                                     filename_set[firstidx+idx,...]=i
                                     save_progress.set_postfix_str("{}".format(i))
                                 elif k =='label':
-                                    label_set[firstidx+idx,...]=i
+                                    label_set[firstidx+idx,...]=int(i)
                                 else:
                                     feature_set_dict[k][firstidx+idx,...]=i
                             if f.done():

@@ -94,9 +94,9 @@ class Extractor:
             #if (('No such file or directory')in str(e)) or (('Unable to open object') in str(e)):
             datasetF= h5py.File(self.output, 'w')
             dt=h5py.string_dtype()
-            filename_set=datasetF.create_dataset('sha256',(0,),dtype=dt,maxshape=(None,),chunks=True, compression="lzf")
-            label_set=datasetF.create_dataset('label',(0,),dtype=np.uint8,maxshape=(None,),chunks=True, compression="lzf")
-            feature_set_dict={fe.name:datasetF.create_dataset(fe.name,(0,*fe.dim),dtype=fe.types,maxshape=(None,*fe.dim),chunks=True, compression="lzf") for fe in self.features}
+            filename_set=datasetF.create_dataset('sha256',(0,),dtype=dt,maxshape=(None,),chunks=True)
+            label_set=datasetF.create_dataset('label',(0,),dtype=np.uint8,maxshape=(None,),chunks=True)
+            feature_set_dict={fe.name:datasetF.create_dataset(fe.name,(0,*fe.dim),dtype=fe.types,maxshape=(None,*fe.dim),chunks=True) for fe in self.features}
             #else:
             #    raise e
         firstidx=filename_set.shape[0]
@@ -227,8 +227,8 @@ class testExtractor:
             #if (('No such file or directory')in str(e)) or (('Unable to open object') in str(e)):
             datasetF= h5py.File(self.output, 'w')
             dt=h5py.string_dtype()
-            filename_set=datasetF.create_dataset('sha256',(0,),dtype=dt,maxshape=(None,),chunks=True, compression="lzf")
-            feature_set_dict={fe.name:datasetF.create_dataset(fe.name,(0,*fe.dim),dtype=fe.types,maxshape=(None,*fe.dim),chunks=True, compression="lzf") for fe in self.features}
+            filename_set=datasetF.create_dataset('sha256',(0,),dtype=dt,maxshape=(None,),chunks=True)
+            feature_set_dict={fe.name:datasetF.create_dataset(fe.name,(0,*fe.dim),dtype=fe.types,maxshape=(None,*fe.dim),chunks=True) for fe in self.features}
             #else:
             #    raise e
         firstidx=filename_set.shape[0]

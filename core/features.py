@@ -95,7 +95,7 @@ class ByteHistogram(FeatureType):
         super(FeatureType, self).__init__()
 
     def raw_features(self, bytez, lief_and_pefile):
-        counts = np.bincount(np.frombuffer(bytez, dtype=np.float32), minlength=256)
+        counts = np.bincount(np.frombuffer(bytez, dtype=np.uint8), minlength=256)
         return counts.tolist()
 
     def process_raw_features(self, raw_obj):
@@ -133,8 +133,8 @@ class ByteEntropyHistogram(FeatureType):
         return Hbin, c
 
     def raw_features(self, bytez, lief_and_pefile):
-        output = np.zeros((16, 16), dtype=np.float32)
-        a = np.frombuffer(bytez, dtype=np.float32)
+        output = np.zeros((16, 16), dtype=np.int)
+        a = np.frombuffer(bytez, dtype=np.uint8)
         if a.shape[0] < self.window:
             Hbin, c = self._entropy_bin_counts(a)
             output[Hbin, :] += c

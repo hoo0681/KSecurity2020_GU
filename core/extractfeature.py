@@ -81,17 +81,14 @@ class Extractor:
         end = len(next(os.walk(self.datadir))[2])
         extractor_iterator = ((idx,sample) for idx, sample in enumerate(utility.directory_generator(self.datadir)))
         try:
+            #print(self.output)
             datasetF=h5py.File(self.output, 'r+')
+            print(datasetF.keys())
             filename_set=datasetF['sha256']
             label_set=datasetF['label']
             feature_set_dict={fe.name:datasetF[fe.name] for fe in self.features}
-            #dt=h5py.string_dtype()
-            #filename_set=datasetF.require_dataset('sha256',(0,),dtype=dt,maxshape=(None,),chunks=False,exact=True)
-            #label_set=datasetF.require_dataset('label',(0,),dtype=np.uint8,maxshape=(None,),chunks=False,exact=True)
-            #feature_set_dict={fe.name:datasetF.require_dataset(fe.name,(0,*fe.dim),exact=True,dtype=fe.types,maxshape=(None,*fe.dim),chunks=True) for fe in self.features}
         except (Exception , OSError) as e:
             print('new file',self.output)
-            #if (('No such file or directory')in str(e)) or (('Unable to open object') in str(e)):
             datasetF= h5py.File(self.output, 'w')
             dt=h5py.string_dtype()
             filename_set=datasetF.create_dataset('sha256',(0,),dtype=dt,maxshape=(None,),chunks=True)
@@ -131,25 +128,6 @@ class Extractor:
                             if f.done():
                                 futures.remove(f)
                                 save_progress.update(1)
-                                
-                            #print(len(futures))
-                    #while len(futures)!=0:
-                    #    tmp=futures.pop()
-                    #    if tmp.running():
-                    #        futures.append(tmp)
-                    #    elif tmp.done():
-                    #        idx,result = tmp.result()
-                    #        print(len(futures))
-                    #        for k,i in result.items():
-                    #            if k =='sha256':
-                    #                filename_set[firstidx+idx,...]=i
-                    #            elif k =='label':
-                    #                label_set[firstidx+idx,...]=i
-                    #            else:
-                    #                feature_set_dict[k][firstidx+idx,...]=i
-                    #    else:
-                    #        futures.append(tmp)
-                    #    #del result
         except Exception as e:
             print('error: ',e)
             filename_set.resize((firstidx,))
@@ -218,13 +196,8 @@ class testExtractor:
             datasetF=h5py.File(self.output, 'r+')
             filename_set=datasetF['sha256']
             feature_set_dict={fe.name:datasetF[fe.name] for fe in self.features}
-            #dt=h5py.string_dtype()
-            #filename_set=datasetF.require_dataset('sha256',(0,),dtype=dt,maxshape=(None,),chunks=False,exact=True)
-            #label_set=datasetF.require_dataset('label',(0,),dtype=np.uint8,maxshape=(None,),chunks=False,exact=True)
-            #feature_set_dict={fe.name:datasetF.require_dataset(fe.name,(0,*fe.dim),exact=True,dtype=fe.types,maxshape=(None,*fe.dim),chunks=True) for fe in self.features}
         except (Exception , OSError) as e:
             print('new file',self.output)
-            #if (('No such file or directory')in str(e)) or (('Unable to open object') in str(e)):
             datasetF= h5py.File(self.output, 'w')
             dt=h5py.string_dtype()
             filename_set=datasetF.create_dataset('sha256',(0,),dtype=dt,maxshape=(None,),chunks=True)
@@ -257,25 +230,6 @@ class testExtractor:
                             if f.done():
                                 futures.remove(f)
                                 save_progress.update(1)
-                                
-                            #print(len(futures))
-                    #while len(futures)!=0:
-                    #    tmp=futures.pop()
-                    #    if tmp.running():
-                    #        futures.append(tmp)
-                    #    elif tmp.done():
-                    #        idx,result = tmp.result()
-                    #        print(len(futures))
-                    #        for k,i in result.items():
-                    #            if k =='sha256':
-                    #                filename_set[firstidx+idx,...]=i
-                    #            elif k =='label':
-                    #                label_set[firstidx+idx,...]=i
-                    #            else:
-                    #                feature_set_dict[k][firstidx+idx,...]=i
-                    #    else:
-                    #        futures.append(tmp)
-                    #    #del result
         except Exception as e:
             print('error: ',e)
             filename_set.resize((firstidx,))

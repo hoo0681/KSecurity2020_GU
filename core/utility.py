@@ -2,7 +2,7 @@ import os
 import json
 import jsonlines
 from . import features
-
+from  numpy import pad, concatenate
 def checkNone(_str_value):
     """
     Check if string is None
@@ -52,3 +52,8 @@ class FeatureType:
                 featurelist.append(self.names.get(feature))
 
         return featurelist
+def get_numpy_from_nonfixed_2d_array(aa, fixed_length, padding_value=0):
+    rows = []
+    for a in aa:
+        rows.append(pad(a, (0, fixed_length), 'constant', constant_values=padding_value)[:fixed_length])
+    return concatenate(rows, axis=0).reshape(-1, fixed_length)

@@ -48,6 +48,7 @@ FEATURE_TPYE_LIST=[
               "ParsingWarning",
               "IsPacked",
               'RichHeader',
+              'DataDirectories',
               "IMG_IC_origin",
               "IMG_IC_log",
               "SO_img",
@@ -94,7 +95,7 @@ class ByteHistogram(FeatureType):
         super(FeatureType, self).__init__()
 
     def raw_features(self, bytez, lief_and_pefile):
-        counts = np.bincount(np.frombuffer(bytez, dtype=np.uint8), minlength=256)
+        counts = np.bincount(np.frombuffer(bytez, dtype=np.float32), minlength=256)
         return counts.tolist()
 
     def process_raw_features(self, raw_obj):
@@ -132,8 +133,8 @@ class ByteEntropyHistogram(FeatureType):
         return Hbin, c
 
     def raw_features(self, bytez, lief_and_pefile):
-        output = np.zeros((16, 16), dtype=np.int)
-        a = np.frombuffer(bytez, dtype=np.uint8)
+        output = np.zeros((16, 16), dtype=np.float32)
+        a = np.frombuffer(bytez, dtype=np.float32)
         if a.shape[0] < self.window:
             Hbin, c = self._entropy_bin_counts(a)
             output[Hbin, :] += c
@@ -482,7 +483,7 @@ class ParsingWarning(FeatureType):
 
     name = 'ParsingWarning'
     dim = (2,)
-    types=np.uint
+    types=np.float32
     def __init__(self):#FeatureType상속
         super(FeatureType, self).__init__()
 
@@ -507,14 +508,14 @@ class ParsingWarning(FeatureType):
         
     def process_raw_features(self, raw_obj):
         return np.asarray([
-            raw_obj['has_warning'],raw_obj['warnings']],dtype=np.uint8
+            raw_obj['has_warning'],raw_obj['warnings']],dtype=self.types
         )
 class IsPacked(FeatureType):
     """ packed 되었는지 추측 Packed_PE_File_Detection_for_Malware_Forensics 참고"""
 
     name = 'IsPacked'
     dim = (1,)
-    types=np.uint8
+    types=np.float32
     def __init__(self): #생성자
         super(FeatureType, self).__init__()#상속받기
 
@@ -551,12 +552,12 @@ class IsPacked(FeatureType):
     def process_raw_features(self, raw_obj):#추출한 값 가공
         #raw_obj =>raw_features에서 반환하는 값
         #가공과정
-        return np.array([raw_obj]).astype(np.uint8)
+        return np.array([raw_obj]).astype(self.types)
 class RichHeader(FeatureType):
     """RichHeader정보 어떻게 벡터화 할지 정해지지 않음"""
     name = 'RichHeader'
-    dim = (10,3)
-    types=np.uint8
+    dim = (30,)
+    types=np.float32
     def __init__(self): #생성자
         super(FeatureType, self).__init__()#상속받기
     def raw_features(self, bytez, lief_and_pefile):
@@ -572,24 +573,20 @@ class RichHeader(FeatureType):
     def process_raw_features(self, raw_obj):#추출한 값 가공
         #raw_obj =>raw_features에서 반환하는 값
         #가공과정
-        result = np.zeros((10,3))
+        result = []
         if raw_obj==0:
             return result
         else:
             for key in raw_obj.keys():
-                if len(raw_obj[key])>10:
-                    raw_obj[key]=raw_obj[key][:10]
-            result[:len(raw_obj['id']),0] = raw_obj['id']
-            result[:len(raw_obj['build_id']),1] = raw_obj['build_id']
-            result[:len(raw_obj['count']),2] = raw_obj['count']
-            return result.astype(np.uint8)
-
+                result.append(np.pad(raw_obj[key],(0,10), 'constant', constant_values=0)[:10])
+            result=np.concatenate(result, axis=0)
+            return result.reshape(self.dim).astype(self.types)
 class SO_img(FeatureType):
     """stream order 방식의 이미지 생성"""
 
     name = 'SO_img'
     dim = (256,256)
-    types=np.uint8
+    types=np.float32
     def __init__(self): #생성자
         super(FeatureType, self).__init__()#상속받기
 
@@ -612,7 +609,7 @@ class SO_img(FeatureType):
                     SO[x,y]=0
                 i+=1
         SO=np.resize(SO,(256,256))
-        return SO.astype(np.uint8)
+        return SO.astype(self.types)
     def process_raw_features(self, raw_obj):#추출한 값 가공
         #raw_obj =>raw_features에서 반환하는 값
         #가공과정
@@ -830,9 +827,9 @@ class IMG_IC_uniform_QuantileTransformer(FeatureType):
 class DataDirectories(FeatureType):
     ''' Extracts size and virtual address of the first 15 data directories '''
 
-    name = 'datadirectories'
+    name = 'DataDirectories'
     dim = (15 * 2,)
-
+    types=np.float32    
     def __init__(self):
         super(FeatureType, self).__init__()
         self._name_order = [

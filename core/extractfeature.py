@@ -41,10 +41,6 @@ class BaseExtractor:
         self.datadir = datadir
         self.output = output
         self.features = features
-    def append2feature_dict(self,target_dict,**kwargs):
-        #sample=kwargs['sha256']
-        #kwargs.update({"label" :self.data[self.data.hash==sample].values[0][1]})
-        return target_dict.update(kwargs)
     def extract_features(self, sample):
         """
         Extract features.
@@ -56,8 +52,7 @@ class BaseExtractor:
             binary = open(fullpath, 'rb').read()
             #feature = extractor.raw_features(binary)
             feature = extractor.dict2npdict(binary)
-            feature = self.append2feature_dict(feature,{"sha256": sample})
-            #feature.update({"sha256": sample}) # sample name(hash)
+            feature.update({"sha256": sample}) # sample name(hash)
         except KeyboardInterrupt:
             sys.exit()
         except Exception as e:  
@@ -70,31 +65,29 @@ class BaseExtractor:
         """
         idx,path=args
         return (idx,self.extract_features(path))
-    def hdf_init(self,):
+    def hdf_init(self):
         end = len(next(os.walk(self.datadir))[2])
         try:
-            self.datasetF=h5py.File(self.output, 'r+')
-            filename_set=self.datasetF['sha256']
-            feature_set_dict={fe.name:self.datasetF[fe.name] for fe in self.features}
+            datasetF=h5py.File(self.output, 'r+')
+            filename_set=datasetF['sha256']
+            feature_set_dict={fe.name:datasetF[fe.name] for fe in self.features}
         except (Exception , OSError) as e:
             print('new file',self.output)
-            self.datasetF= h5py.File(self.output, 'w')
+            datasetF= h5py.File(self.output, 'w')
             dt=h5py.string_dtype()
-            filename_set=self.datasetF.create_dataset('sha256',(0,),dtype=dt,maxshape=(None,),chunks=True)
-            feature_set_dict={fe.name:self.datasetF.create_dataset(fe.name,(0,*fe.dim),dtype=fe.types,maxshape=(None,*fe.dim),chunks=True) for fe in self.features}
+            filename_set=datasetF.create_dataset('sha256',(0,),dtype=dt,maxshape=(None,),chunks=True)
+            feature_set_dict={fe.name:datasetF.create_dataset(fe.name,(0,*fe.dim),dtype=fe.types,maxshape=(None,*fe.dim),chunks=True) for fe in self.features}
         self.firstidx=filename_set.shape[0]
-        self.filename_set=filename_set
-        self.feature_set_dict=feature_set_dict
         filename_set.resize((filename_set.shape[0]+end,))
-        for i in self.feature_set_dict.values():
+        for i in feature_set_dict.values():
             i.resize((i.shape[0]+end,*i.shape[1:]))
-        return end
-    def hdf_roll_back(self):
-        self.filename_set.resize((self.firstidx,))
-        for i in self.feature_set_dict.values():
+        return end,feature_set_dict,filename_set,datasetF
+    def hdf_roll_back(self,filename_set,feature_set_dict):
+        filename_set.resize((self.firstidx,))
+        for i in feature_set_dict.values():
             i.resize((self.firstidx,*i.shape[1:]))
-    def update_feature(self,key,idx,data):
-        self.feature_set_dict[key][self.firstidx+idx,...]=data
+    def update_feature(self,key,idx,data,feature_set_dict):
+        feature_set_dict[key][self.firstidx+idx,...]=data
     def extractor_multiprocess(self):
         """
         Ready to do multi Process
@@ -102,7 +95,7 @@ class BaseExtractor:
         Currently, I think that It is not safely. Because, multiprocess pool try to do FILE I/O.
         """
         extractor_iterator = ((idx,sample) for idx, sample in enumerate(utility.directory_generator(self.datadir)))
-        end=self.hdf_init()
+        end,feature_set_dict,filename_set,datasetF=self.hdf_init()
         
         try:
             with ProcessPoolExecutor(max_workers=4) as pool:
@@ -118,21 +111,22 @@ class BaseExtractor:
                             idx,result = f.result()
                             for k,i in result.items():
                                 if k =='sha256':
-                                    self.filename_set[self.firstidx+idx,...]=i
+                                    filename_set[self.firstidx+idx,...]=i
                                     save_progress.set_postfix_str("{}".format(i))
                                 else:
-                                    self.update_feature(k,idx,i)
+                                    self.update_feature(k,idx,i,feature_set_dict)
                             if f.done():
                                 futures.remove(f)
                                 save_progress.update(1)
         except Exception as e:
             print('error: ',e)
-            self.hdf_roll_back()
+            self.hdf_roll_back(filename_set,feature_set_dict)
             pass
         except:
             raise
         finally:
-            self.datasetF.close()
+            datasetF.close()
+            print('close')
         print('GC start')
         gc.collect()
         print('GC done')
@@ -150,30 +144,28 @@ class Extractor(BaseExtractor):
         sample=kwargs['sha256']
         kwargs.update({"label" :self.data[self.data.hash==sample].values[0][1]})
         return target_dict.update(kwargs)
-    def update_feature(self,key,idx,data):
-        self.feature_set_dict[key][self.firstidx+idx,...]=data
+    def update_feature(self,key,idx,data,feature_set_dict):
+        feature_set_dict[key][self.firstidx+idx,...]=data
     def hdf_init(self,):
         end = len(next(os.walk(self.datadir))[2])
         try:
-            self.datasetF=h5py.File(self.output, 'r+')
-            filename_set=self.datasetF['sha256']
-            label_set=self.datasetF['label']
-            feature_set_dict={fe.name:self.datasetF[fe.name] for fe in self.features}
+            datasetF=h5py.File(self.output, 'r+')
+            filename_set=datasetF['sha256']
+            label_set=datasetF['label']
+            feature_set_dict={fe.name:datasetF[fe.name] for fe in self.features}
         except (Exception , OSError) as e:
             print('new file',self.output)
-            self.datasetF= h5py.File(self.output, 'w')
+            datasetF= h5py.File(self.output, 'w')
             dt=h5py.string_dtype()
-            label_set=self.datasetF.create_dataset('label',(0,),dtype=np.uint8,maxshape=(None,),chunks=True)
-            filename_set=self.datasetF.create_dataset('sha256',(0,),dtype=dt,maxshape=(None,),chunks=True)
-            feature_set_dict={fe.name:self.datasetF.create_dataset(fe.name,(0,*fe.dim),dtype=fe.types,maxshape=(None,*fe.dim),chunks=True) for fe in self.features}
+            label_set=datasetF.create_dataset('label',(0,),dtype=np.uint8,maxshape=(None,),chunks=True)
+            filename_set=datasetF.create_dataset('sha256',(0,),dtype=dt,maxshape=(None,),chunks=True)
+            feature_set_dict={fe.name:datasetF.create_dataset(fe.name,(0,*fe.dim),dtype=fe.types,maxshape=(None,*fe.dim),chunks=True) for fe in self.features}
         self.firstidx=filename_set.shape[0]
-        self.filename_set=filename_set
-        self.feature_set_dict=feature_set_dict.update({'label':label_set})
+        feature_set_dict=feature_set_dict.update({'label':label_set})
         filename_set.resize((filename_set.shape[0]+end,))
         for i in feature_set_dict.values():
             i.resize((i.shape[0]+end,*i.shape[1:]))
-        return end
- 
+        return end,feature_set_dict,filename_set,datasetF
 
 class testExtractor(BaseExtractor):
     def __init__(self, datadir, output, features):

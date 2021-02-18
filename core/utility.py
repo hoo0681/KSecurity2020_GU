@@ -18,7 +18,7 @@ def directory_generator(datadir):
     """
     Os.listdir to iterator
     """
-    for sample in os.listdir(datadir):
+    for sample in sorted(os.listdir(datadir)):
         yield sample
 
 

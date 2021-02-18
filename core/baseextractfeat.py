@@ -83,11 +83,9 @@ class BaseExtractor:
             filename_set=self.datasetF.create_dataset('sha256',(0,),dtype=dt,maxshape=(None,),chunks=True)
             feature_set_dict={fe.name:self.datasetF.create_dataset(fe.name,(0,*fe.dim),dtype=fe.types,maxshape=(None,*fe.dim),chunks=True) for fe in self.features}
         self.firstidx=filename_set.shape[0]
+        filename_set.resize((filename_set.shape[0]+end,))
         self.filename_set=filename_set
         self.feature_set_dict=feature_set_dict
-        filename_set.resize((filename_set.shape[0]+end,))
-        for i in self.feature_set_dict.values():
-            i.resize((i.shape[0]+end,*i.shape[1:]))
         return end
     def hdf_roll_back(self):
         self.filename_set.resize((self.firstidx,))
@@ -103,7 +101,8 @@ class BaseExtractor:
         """
         extractor_iterator = ((idx,sample) for idx, sample in enumerate(utility.directory_generator(self.datadir)))
         end=self.hdf_init()
-        
+        for i in self.feature_set_dict.values():
+            i.resize((i.shape[0]+end,*i.shape[1:]))
         try:
             with ProcessPoolExecutor(max_workers=4) as pool:
                 with tqdm.tqdm(total=end,ascii=True,position=0, leave=True,desc='feature progress') as progress:
@@ -142,39 +141,3 @@ class BaseExtractor:
         progress.update(1)
     def run(self):
         self.extractor_multiprocess()
-class Extractor(BaseExtractor):
-    def __init__(self, datadir, label, output, features):
-        super().__init__(datadir,output, features)
-        self.data = pd.read_csv(label, names=['hash', 'y'])
-    def append2feature_dict(self,target_dict,**kwargs):
-        sample=kwargs['sha256']
-        kwargs.update({"label" :self.data[self.data.hash==sample].values[0][1]})
-        return target_dict.update(kwargs)
-    def update_feature(self,key,idx,data):
-        self.feature_set_dict[key][self.firstidx+idx,...]=data
-    def hdf_init(self,):
-        end = len(next(os.walk(self.datadir))[2])
-        try:
-            self.datasetF=h5py.File(self.output, 'r+')
-            filename_set=self.datasetF['sha256']
-            label_set=self.datasetF['label']
-            feature_set_dict={fe.name:self.datasetF[fe.name] for fe in self.features}
-        except (Exception , OSError) as e:
-            print('new file',self.output)
-            self.datasetF= h5py.File(self.output, 'w')
-            dt=h5py.string_dtype()
-            label_set=self.datasetF.create_dataset('label',(0,),dtype=np.uint8,maxshape=(None,),chunks=True)
-            filename_set=self.datasetF.create_dataset('sha256',(0,),dtype=dt,maxshape=(None,),chunks=True)
-            feature_set_dict={fe.name:self.datasetF.create_dataset(fe.name,(0,*fe.dim),dtype=fe.types,maxshape=(None,*fe.dim),chunks=True) for fe in self.features}
-        self.firstidx=filename_set.shape[0]
-        self.filename_set=filename_set
-        self.feature_set_dict=feature_set_dict.update({'label':label_set})
-        filename_set.resize((filename_set.shape[0]+end,))
-        for i in feature_set_dict.values():
-            i.resize((i.shape[0]+end,*i.shape[1:]))
-        return end
- 
-
-class testExtractor(BaseExtractor):
-    def __init__(self, datadir, output, features):
-        super().__init__(datadir, output, features)

@@ -139,13 +139,28 @@ class BaseExtractor:
 class Extractor(BaseExtractor):
     def __init__(self, datadir, label, output, features):
         super().__init__(datadir,output, features)
-        self.data = pd.read_csv(label, names=['hash', 'y'])
-    def append2feature_dict(self,target_dict,**kwargs):
-        sample=kwargs['sha256']
-        kwargs.update({"label" :self.data[self.data.hash==sample].values[0][1]})
-        return target_dict.update(kwargs)
+        self.data = pd.read_csv(label)
+    def extract_features(self, sample):
+        """
+        Extract features.
+        If error is occured, return None Object
+        """
+        extractor = PEFeatureExtractor(self.features)
+        fullpath = os.path.join(os.path.join(self.datadir, sample))
+        try:
+            binary = open(fullpath, 'rb').read()
+            #feature = extractor.raw_features(binary)
+            feature = extractor.dict2npdict(binary)
+            feature.update({"sha256": sample}) # sample name(hash)
+            feature.update({"label" :self.data[self.data.hash==sample].values[0][1]})
+        except KeyboardInterrupt:
+            sys.exit()
+        except Exception as e:  
+            logger.error('{}: {} error is occuered'.format(sample, e))
+            return None
+        return feature
     def update_feature(self,key,idx,data,feature_set_dict):
-        feature_set_dict[key][self.firstidx+idx,...]=data
+        feature_set_dict[key][self.firstidx+idx,...]=data if key is not 'label' else int(data)
     def hdf_init(self,):
         end = len(next(os.walk(self.datadir))[2])
         try:
@@ -161,7 +176,7 @@ class Extractor(BaseExtractor):
             filename_set=datasetF.create_dataset('sha256',(0,),dtype=dt,maxshape=(None,),chunks=True)
             feature_set_dict={fe.name:datasetF.create_dataset(fe.name,(0,*fe.dim),dtype=fe.types,maxshape=(None,*fe.dim),chunks=True) for fe in self.features}
         self.firstidx=filename_set.shape[0]
-        feature_set_dict=feature_set_dict.update({'label':label_set})
+        feature_set_dict['label']=label_set
         filename_set.resize((filename_set.shape[0]+end,))
         for i in feature_set_dict.values():
             i.resize((i.shape[0]+end,*i.shape[1:]))

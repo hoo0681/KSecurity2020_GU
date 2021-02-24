@@ -19,7 +19,7 @@ logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
 if __name__ == '__main__':
-    print("hoo's: revision NUMBER:2021.02.18 22:07")
+    print("hoo's: revision NUMBER:2021.02.24 22:07")
     parser = argparse.ArgumentParser()
     help_ = "가천대학교 201935364 홍승후 k시큐리티 특징추출기"
     parser.add_argument("-A","--action",choices=["TrainExtFeat","TestExtFeat"],required=True, help=help_)
@@ -52,7 +52,7 @@ if __name__ == '__main__':
                 elif 'only_img' in args.selectFeature:
                     features=[getattr(features,f)() for f in features.FEATURE_TPYE_LIST if f.lower().find('img')!=-1]
             else:
-                features=[getattr(features,f)() for f in args.selectFeature]
+                features=[getattr(features,f)() for f in args.selectFeature] if len(args.selectFeature)!=1 else [getattr(features,args.selectFeature)] 
             #features = []
             #for i,v in zip(range(len(features.FEATURE_TPYE_LIST)),features.FEATURE_TPYE_LIST):
             #    func=getattr(features,v)

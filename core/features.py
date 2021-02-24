@@ -865,7 +865,7 @@ class RawString(FeatureType):
     def raw_features(self, bytez, lief_and_pefile):
         ''' Generate a JSON-able representation of the file '''
         allstrings = map(bytes.decode,re.compile(b'[\x20-\x7f]{5,}').findall(bytez))#최소 5자이상의 문자열 추출
-        return allstrings
+        return list(allstrings)
 
     def process_raw_features(self, raw_obj):
         ''' Generate a feature vector from the raw features '''

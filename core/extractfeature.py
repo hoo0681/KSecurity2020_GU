@@ -88,17 +88,19 @@ class BaseExtractor:
             i.resize((self.firstidx,*i.shape[1:]))
     def update_feature(self,key,idx,data,feature_set_dict):
         feature_set_dict[key][self.firstidx+idx,...]=data
+    def sample_gen(self):
+        return utility.directory_generator(self.datadir)
     def extractor_multiprocess(self):
         """
         Ready to do multi Process
         Note that total variable in tqdm.tqdm should be revised
         Currently, I think that It is not safely. Because, multiprocess pool try to do FILE I/O.
         """
-        extractor_iterator = ((idx,sample) for idx, sample in enumerate(utility.directory_generator(self.datadir)))
+        extractor_iterator = ((idx,sample) for idx, sample in enumerate(self.sample_gen()))
         end,feature_set_dict,filename_set,datasetF=self.hdf_init()
         
         try:
-            with ProcessPoolExecutor(max_workers=4) as pool:
+            with ProcessPoolExecutor() as pool:
                 with tqdm.tqdm(total=end,ascii=True,position=0, leave=True,desc='feature progress') as progress:
                     with tqdm.tqdm(total=end,ascii=True,position=1, leave=True,desc='save progress') as save_progress:
                         futures = []
@@ -162,7 +164,7 @@ class Extractor(BaseExtractor):
     def update_feature(self,key,idx,data,feature_set_dict):
         feature_set_dict[key][self.firstidx+idx,...]=data if key is not 'label' else int(data)
     def hdf_init(self,):
-        end = len(next(os.walk(self.datadir))[2])
+        end = list(self.data['hash'])
         try:
             datasetF=h5py.File(self.output, 'r+')
             filename_set=datasetF['sha256']
@@ -181,7 +183,9 @@ class Extractor(BaseExtractor):
         for i in feature_set_dict.values():
             i.resize((i.shape[0]+end,*i.shape[1:]))
         return end,feature_set_dict,filename_set,datasetF
-
+    def sample_gen(self):
+        for sample in list(self.data['hash']):
+            yield sample
 class testExtractor(BaseExtractor):
     def __init__(self, datadir, output, features):
         super().__init__(datadir, output, features)

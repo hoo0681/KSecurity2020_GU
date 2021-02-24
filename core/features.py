@@ -52,6 +52,7 @@ FEATURE_TPYE_LIST=[
               "IMG_IC_origin",
               "IMG_IC_log",
               "SO_img",
+              "RawString"
               #"IMG_IC_standard_scaling",
               #"IMG_IC_MinMax_scaling",
               #"IMG_IC_MaxAbs_scaling",
@@ -103,7 +104,6 @@ class ByteHistogram(FeatureType):
         sum = counts.sum()
         normalized = counts / sum
         return normalized
-
 class ByteEntropyHistogram(FeatureType):
     ''' 2d byte/entropy histogram based loosely on (Saxe and Berlin, 2015).
     This roughly approximates the joint probability of byte value and local entropy.
@@ -156,7 +156,6 @@ class ByteEntropyHistogram(FeatureType):
         sum = counts.sum()
         normalized = counts / sum
         return normalized
-
 class SectionInfo(FeatureType):
     ''' Information about section names, sizes and entropy.  Uses hashing trick
     to summarize all this section info into a feature vector.
@@ -227,7 +226,6 @@ class SectionInfo(FeatureType):
             general, section_sizes_hashed, section_entropy_hashed, section_vsize_hashed, entry_name_hashed,
             characteristics_hashed
         ]).astype(np.float32)
-
 class ImportsInfo(FeatureType):
     ''' Information about imported libraries and functions from the
     import address table.  Note that the total number of imported
@@ -268,7 +266,6 @@ class ImportsInfo(FeatureType):
 
         # Two separate elements: libraries (alone) and fully-qualified names of imported functions
         return np.hstack([libraries_hashed, imports_hashed]).astype(np.float32)
-
 class ExportsInfo(FeatureType):
     ''' Information about exported functions. Note that the total number of exported
     functions is contained in GeneralFileInfo.
@@ -295,7 +292,6 @@ class ExportsInfo(FeatureType):
     def process_raw_features(self, raw_obj):
         exports_hashed = FeatureHasher(128, input_type="string").transform([raw_obj]).toarray()[0]
         return exports_hashed.astype(np.float32)
-
 class GeneralFileInfo(FeatureType):
     ''' General information about the file '''
 
@@ -342,7 +338,6 @@ class GeneralFileInfo(FeatureType):
                 raw_obj['symbols']
             ],
             dtype=np.float32)
-
 class HeaderFileInfo(FeatureType):
     ''' Machine, architecure, OS, linker and other information extracted from header '''
 
@@ -418,7 +413,6 @@ class HeaderFileInfo(FeatureType):
             raw_obj['optional']['sizeof_headers'],
             raw_obj['optional']['sizeof_heap_commit'],
         ]).astype(np.float32)
-
 class StringExtractor(FeatureType):
     ''' Extracts strings from raw byte stream '''
 
@@ -614,8 +608,6 @@ class SO_img(FeatureType):
         #raw_obj =>raw_features에서 반환하는 값
         #가공과정
         return raw_obj
-        
-
 def GenerateTime(lief_binary):
     if lief_binary is None:
         return time.strftime('%Y-%m', time.gmtime(0))
@@ -859,6 +851,36 @@ class DataDirectories(FeatureType):
                 features[2 * i] = raw_obj[i]["size"]
                 features[2 * i + 1] = raw_obj[i]["virtual_address"]
         return features
+class RawString(FeatureType):
+    ''' Base class from which each feature type may inherit '''
+    
+    name = 'RawString'
+    max_len=4000
+    dim = (max_len,)
+    types=np.unicode_
+    PAD_First=True
+    def __init__(self): #생성자
+        super(FeatureType, self).__init__()#상속받기
+
+    def raw_features(self, bytez, lief_and_pefile):
+        ''' Generate a JSON-able representation of the file '''
+        allstrings = map(bytes.decode,re.compile(b'[\x20-\x7f]{5,}').findall(bytez))#최소 5자이상의 문자열 추출
+        return allstrings
+
+    def process_raw_features(self, raw_obj):
+        ''' Generate a feature vector from the raw features '''
+        if self.PAD_First:
+            padded=[['<PAD>']*(self.max_len-len(raw_obj))+ raw_obj if len(raw_obj)<self.max_len else raw_obj[:self.max_len]][0]
+        else:
+            padded=[raw_obj+['<PAD>']*(self.max_len-len(raw_obj)) if len(raw_obj)<self.max_len else raw_obj[:self.max_len]][0]
+        return np.array(padded,dtype=self.types)
+        
+
+    def feature_vector(self, bytez, lief_and_pefile):
+        ''' Directly calculate the feature vector from the sample itself. This should only be implemented differently
+        if there are significant speedups to be gained from combining the two functions. '''
+        return self.process_raw_features(self.raw_features(bytez, lief_and_pefile))
+
 class PEFeatureExtractor(object):
     ''' Extract useful features from a PE file, and return as a vector of fixed size. '''
     def __init__(self, featurelist, dim=0):
@@ -888,8 +910,6 @@ class PEFeatureExtractor(object):
         try:
             pe=pefile.PE(data=bytez)
             lief_binary = lief.PE.parse(list(bytez))
-            
-            
         except lief.read_out_of_bound:
             try:
                 lief_binary=lief.parse( bytez[:-len(pe.get_overlay())])
@@ -903,8 +923,8 @@ class PEFeatureExtractor(object):
             raise
         lief_and_pefile=(lief_binary,pe)
         #features = {"appeared" : GenerateTime(lief_binary)}
-        features={}
-        features.update({fe.name: fe.feature_vector(bytez, lief_and_pefile) for fe in self.features})
+        #features={}
+        features={fe.name: fe.feature_vector(bytez, lief_and_pefile) for fe in self.features}
         return features
     def process_raw_features(self, raw_obj):
         feature_vectors = [fe.process_raw_features(raw_obj[fe.name]) for fe in self.features]

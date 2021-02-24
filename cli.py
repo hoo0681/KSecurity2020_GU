@@ -52,7 +52,10 @@ if __name__ == '__main__':
                 elif 'only_img' in args.selectFeature:
                     features=[getattr(features,f)() for f in features.FEATURE_TPYE_LIST if f.lower().find('img')!=-1]
             else:
-                features=[getattr(features,f)() for f in args.selectFeature] if len(args.selectFeature)!=1 else [getattr(features,args.selectFeature)] 
+                if len(args.selectFeature)!=1:
+                    features=[getattr(features,f)() for f in args.selectFeature]
+                else:
+                    features=[getattr(features,args.selectFeature)] 
             #features = []
             #for i,v in zip(range(len(features.FEATURE_TPYE_LIST)),features.FEATURE_TPYE_LIST):
             #    func=getattr(features,v)

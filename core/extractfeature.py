@@ -164,7 +164,7 @@ class Extractor(BaseExtractor):
     def update_feature(self,key,idx,data,feature_set_dict):
         feature_set_dict[key][self.firstidx+idx,...]=data if key is not 'label' else int(data)
     def hdf_init(self,):
-        end = list(self.data['hash'])
+        end = len(list(self.data['hash']))
         try:
             datasetF=h5py.File(self.output, 'r+')
             filename_set=datasetF['sha256']

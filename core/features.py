@@ -857,7 +857,7 @@ class RawString(FeatureType):
     name = 'RawString'
     max_len=4000
     dim = (max_len,)
-    types=np.np.string_
+    types=np.string_
     PAD_First=True
     def __init__(self): #생성자
         super(FeatureType, self).__init__()#상속받기

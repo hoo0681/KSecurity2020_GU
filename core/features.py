@@ -857,15 +857,15 @@ class RawString(FeatureType):
     name = 'RawString'
     max_len=4000
     dim = (max_len,)
-    types=np.unicode_
+    types=np.np.string_
     PAD_First=True
     def __init__(self): #생성자
         super(FeatureType, self).__init__()#상속받기
 
     def raw_features(self, bytez, lief_and_pefile):
         ''' Generate a JSON-able representation of the file '''
-        allstrings = map(bytes.decode,re.compile(b'[\x20-\x7f]{5,}').findall(bytez))#최소 5자이상의 문자열 추출
-        return list(allstrings)
+        allstrings = map(bytes.decode,re.compile(b'[\x20-\x7f]{5,100}').findall(bytez))#최소 5자이상 최대 100자의 문자열 추출
+        return list(set(allstrings))
 
     def process_raw_features(self, raw_obj):
         ''' Generate a feature vector from the raw features '''

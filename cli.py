@@ -19,7 +19,7 @@ logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
 if __name__ == '__main__':
-    print("hoo's: revision NUMBER:2021.02.24 22:07")
+    print("hoo's: revision NUMBER:2021.02.26 22:07")
     print("가천대학교 201935364 홍승후 k시큐리티 특징추출기")
     parser = argparse.ArgumentParser()
     help_="[필수] 할 행동을 결정하세요 선택지:['TrainExtFeat','TestExtFeat'] "

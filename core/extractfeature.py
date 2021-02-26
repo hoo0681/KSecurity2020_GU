@@ -76,7 +76,7 @@ class BaseExtractor:
             datasetF= h5py.File(self.output, 'w')
             dt=h5py.string_dtype()
             filename_set=datasetF.create_dataset('sha256',(0,),dtype=dt,maxshape=(None,),chunks=True)
-            feature_set_dict={fe.name:datasetF.create_dataset(fe.name,(0,*fe.dim),dtype=fe.types if fe.types != np.unicode_ else dt,maxshape=(None,*fe.dim),chunks=True) for fe in self.features}
+            feature_set_dict={fe.name:datasetF.create_dataset(fe.name,(0,*fe.dim),dtype=fe.types if fe.types != np.string_ else dt,maxshape=(None,*fe.dim),chunks=True) for fe in self.features}
         self.firstidx=filename_set.shape[0]
         filename_set.resize((filename_set.shape[0]+end,))
         for i in feature_set_dict.values():
@@ -176,7 +176,7 @@ class Extractor(BaseExtractor):
             dt=h5py.string_dtype()
             label_set=datasetF.create_dataset('label',(0,),dtype=np.uint8,maxshape=(None,),chunks=True)
             filename_set=datasetF.create_dataset('sha256',(0,),dtype=dt,maxshape=(None,),chunks=True)
-            feature_set_dict={fe.name:datasetF.create_dataset(fe.name,(0,*fe.dim),dtype=fe.types if fe.types != np.unicode_ else dt,maxshape=(None,*fe.dim),chunks=True) for fe in self.features}
+            feature_set_dict={fe.name:datasetF.create_dataset(fe.name,(0,*fe.dim),dtype=fe.types if fe.types != np.string_ else dt,maxshape=(None,*fe.dim),chunks=True) for fe in self.features}
         self.firstidx=filename_set.shape[0]
         feature_set_dict['label']=label_set
         filename_set.resize((filename_set.shape[0]+end,))

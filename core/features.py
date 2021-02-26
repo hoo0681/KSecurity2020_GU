@@ -855,7 +855,7 @@ class RawString(FeatureType):
     ''' Base class from which each feature type may inherit '''
     
     name = 'RawString'
-    max_len= (4000,)
+    max_len= 4000
     dim = (max_len,)
     types=np.string_
     PAD_First=True

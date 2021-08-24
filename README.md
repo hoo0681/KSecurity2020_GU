@@ -1,6 +1,7 @@
 # Reference
 https://github.com/endgameinc/ember  
 
+# K-사이버 시큐리티 챌린지 2020에 팀명 GKOLH,GKOLH_2로 대회에 참가하여 각각 지역예선 충청권 3위, 부산 1위 본선에서 8위를 했습니다.
 <br />
 
 H. Anderson and P. Roth, "EMBER: An Open Dataset for Training Static PE Malware Machine Learning Models”, in ArXiv e-prints. Apr. 2018.  
